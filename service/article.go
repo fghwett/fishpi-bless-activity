@@ -4,6 +4,7 @@ import (
 	"bless-activity/model"
 	"bless-activity/service/fishpi"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/duke-git/lancet/v2/maputil"
@@ -40,19 +41,22 @@ func (service *ArticleService) FetchArticles() {
 	for {
 		response, err := service.fishpiService.GetApiArticlesTag("福签传情", page, size)
 		if err != nil {
+			service.app.Logger().Error("爬取文章失败", slog.Any("err", err))
 			return
 		}
+		service.app.Logger().Debug("爬取文章结果", slog.Int("length", len(response.Data.Articles)))
 
 		if len(response.Data.Articles) == 0 {
-			break
-		}
-		if page >= response.Data.Pagination.PaginationPageCount {
 			break
 		}
 
 		// 处理文章 和 作者信息
 		for _, article := range response.Data.Articles {
 			service.HandleArticle(article)
+		}
+
+		if page >= response.Data.Pagination.PaginationPageCount {
+			break
 		}
 
 		page++
@@ -97,7 +101,7 @@ func (service *ArticleService) HandleArticle(responseArticle *fishpi.GetApiArtic
 		article.SetThankCnt(responseArticle.ArticleThankCnt)
 		updatedTime, _ := time.ParseInLocation(time.DateTime, responseArticle.ArticleUpdateTimeStr, time.Local)
 		updated, _ := types.ParseDateTime(updatedTime)
-		article.SetUpdated(updated)
+		article.SetUpdatedAt(updated)
 		if err := service.app.Save(article); err != nil {
 			return
 		}
@@ -126,10 +130,10 @@ func (service *ArticleService) HandleArticle(responseArticle *fishpi.GetApiArtic
 	article.SetThankCnt(responseArticle.ArticleThankCnt)
 	createdTime, _ := time.ParseInLocation(time.DateTime, responseArticle.ArticleCreateTimeStr, time.Local)
 	created, _ := types.ParseDateTime(createdTime)
-	article.SetCreated(created)
+	article.SetCreatedAt(created)
 	updatedTime, _ := time.ParseInLocation(time.DateTime, responseArticle.ArticleUpdateTimeStr, time.Local)
 	updated, _ := types.ParseDateTime(updatedTime)
-	article.SetUpdated(updated)
+	article.SetUpdatedAt(updated)
 	if err = service.app.Save(article); err != nil {
 		return
 	}

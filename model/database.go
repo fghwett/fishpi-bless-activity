@@ -131,10 +131,10 @@ const (
 	ArticlesFieldCommentCount   = "commentCount"
 	ArticlesFieldCollectCnt     = "collectCnt"
 	ArticlesFieldThankCnt       = "thankCnt"
-	ArticlesFieldCreated        = "created"
-	ArticlesFieldUpdated        = "updated"
 	ArticlesFieldCreatedAt      = "createdAt"
 	ArticlesFieldUpdatedAt      = "updatedAt"
+	ArticlesFieldCreated        = "created"
+	ArticlesFieldUpdated        = "updated"
 )
 
 type Article struct {
@@ -224,26 +224,26 @@ func (article *Article) SetThankCnt(value int) {
 	article.Set(ArticlesFieldThankCnt, value)
 }
 
-func (article *Article) Created() types.DateTime {
-	return article.GetDateTime(ArticlesFieldCreated)
-}
-
-func (article *Article) SetCreated(value types.DateTime) {
-	article.Set(ArticlesFieldCreated, value)
-}
-
-func (article *Article) Updated() types.DateTime {
-	return article.GetDateTime(ArticlesFieldUpdated)
-}
-
-func (article *Article) SetUpdated(value types.DateTime) {
-	article.Set(ArticlesFieldUpdated, value)
-}
-
 func (article *Article) CreatedAt() types.DateTime {
 	return article.GetDateTime(ArticlesFieldCreatedAt)
 }
 
+func (article *Article) SetCreatedAt(value types.DateTime) {
+	article.Set(ArticlesFieldCreatedAt, value)
+}
+
 func (article *Article) UpdatedAt() types.DateTime {
 	return article.GetDateTime(ArticlesFieldUpdatedAt)
+}
+
+func (article *Article) SetUpdatedAt(value types.DateTime) {
+	article.Set(ArticlesFieldUpdatedAt, value)
+}
+
+func (article *Article) Created() types.DateTime {
+	return article.GetDateTime(ArticlesFieldCreated)
+}
+
+func (article *Article) Updated() types.DateTime {
+	return article.GetDateTime(ArticlesFieldUpdated)
 }
