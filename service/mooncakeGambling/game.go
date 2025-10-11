@@ -1,9 +1,8 @@
 package mooncakeGambling
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"sort"
-	"time"
 )
 
 // PrizeLevel 奖励等级
@@ -51,21 +50,18 @@ type GameResult struct {
 
 // MooncakeGame 博饼游戏
 type MooncakeGame struct {
-	rng *rand.Rand
 }
 
 // NewMooncakeGame 创建新的博饼游戏实例
 func NewMooncakeGame() *MooncakeGame {
-	return &MooncakeGame{
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
-	}
+	return &MooncakeGame{}
 }
 
 // RollDices 掷骰子
 func (g *MooncakeGame) RollDices() [6]int {
 	var dices [6]int
 	for i := 0; i < 6; i++ {
-		dices[i] = g.rng.Intn(6) + 1 // 1-6点
+		dices[i] = rand.IntN(6) + 1 // 1-6点
 	}
 	return dices
 }
