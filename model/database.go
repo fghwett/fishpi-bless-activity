@@ -13,6 +13,8 @@ var (
 	_ core.RecordProxy = (*User)(nil)
 	_ core.RecordProxy = (*Config)(nil)
 	_ core.RecordProxy = (*Article)(nil)
+	_ core.RecordProxy = (*Awards)(nil)
+	_ core.RecordProxy = (*Histories)(nil)
 )
 
 const (
@@ -246,4 +248,167 @@ func (article *Article) Created() types.DateTime {
 
 func (article *Article) Updated() types.DateTime {
 	return article.GetDateTime(ArticlesFieldUpdated)
+}
+
+const (
+	DbNameAwards           = "awards"
+	AwardsFieldLevel       = "level"
+	AwardsFieldName        = "name"
+	AwardsFieldAlias       = "alias"
+	AwardsFieldPoint       = "point"
+	AwardsFieldAmount      = "amount"
+	AwardsFieldDescription = "description"
+)
+
+type Awards struct {
+	core.BaseRecordProxy
+}
+
+func NewAwards(record *core.Record) *Awards {
+	award := new(Awards)
+	award.SetProxyRecord(record)
+	return award
+}
+
+func NewAwardsFromCollection(collection *core.Collection) *Awards {
+	record := core.NewRecord(collection)
+	return NewAwards(record)
+}
+
+func (award *Awards) Level() int {
+	return award.GetInt(AwardsFieldLevel)
+}
+
+func (award *Awards) SetLevel(value int) {
+	award.Set(AwardsFieldLevel, value)
+}
+
+func (award *Awards) Name() string {
+	return award.GetString(AwardsFieldName)
+}
+
+func (award *Awards) SetName(value string) {
+	award.Set(AwardsFieldName, value)
+}
+
+func (award *Awards) Alias() string {
+	return award.GetString(AwardsFieldAlias)
+}
+
+func (award *Awards) SetAlias(value string) {
+	award.Set(AwardsFieldAlias, value)
+}
+
+func (award *Awards) Point() int {
+	return award.GetInt(AwardsFieldPoint)
+}
+
+func (award *Awards) SetPoint(value int) {
+	award.Set(AwardsFieldPoint, value)
+}
+
+func (award *Awards) Amount() int {
+	return award.GetInt(AwardsFieldAmount)
+}
+
+func (award *Awards) SetAmount(value int) {
+	award.Set(AwardsFieldAmount, value)
+}
+
+func (award *Awards) Description() string {
+	return award.GetString(AwardsFieldDescription)
+}
+
+func (award *Awards) SetDescription(value string) {
+	award.Set(AwardsFieldDescription, value)
+}
+
+const (
+	DbNameHistories       = "histories"
+	HistoriesFieldUserId  = "userId"
+	HistoriesFieldTimes   = "times"
+	HistoriesFieldAwardId = "awardId"
+	HistoriesFieldIsTop   = "isTop"
+	HistoriesFieldIsBest  = "isBest"
+	HistoriesFieldDetails = "details"
+	HistoriesFieldCreated = "created"
+	HistoriesFieldUpdated = "updated"
+)
+
+type Histories struct {
+	core.BaseRecordProxy
+}
+
+func NewHistories(record *core.Record) *Histories {
+	history := new(Histories)
+	history.SetProxyRecord(record)
+	return history
+}
+
+func NewHistoriesFromCollection(collection *core.Collection) *Histories {
+	record := core.NewRecord(collection)
+	return NewHistories(record)
+}
+func (history *Histories) UserId() string {
+	return history.GetString(HistoriesFieldUserId)
+}
+
+func (history *Histories) SetUserId(value string) {
+	history.Set(HistoriesFieldUserId, value)
+}
+
+func (history *Histories) Times() int {
+	return history.GetInt(HistoriesFieldTimes)
+}
+
+func (history *Histories) SetTimes(value int) {
+	history.Set(HistoriesFieldTimes, value)
+}
+
+func (history *Histories) AwardId() string {
+	return history.GetString(HistoriesFieldAwardId)
+}
+
+func (history *Histories) SetAwardId(value string) {
+	history.Set(HistoriesFieldAwardId, value)
+}
+
+func (history *Histories) IsTop() bool {
+	return history.GetBool(HistoriesFieldIsTop)
+}
+
+func (history *Histories) SetIsTop(value bool) {
+	history.Set(HistoriesFieldIsTop, value)
+}
+
+func (history *Histories) IsBest() bool {
+	return history.GetBool(HistoriesFieldIsBest)
+}
+
+func (history *Histories) SetIsBest(value bool) {
+	history.Set(HistoriesFieldIsBest, value)
+}
+
+func (history *Histories) Details() [6]int {
+	var details = types.JSONArray[int]{}
+	_ = details.Scan(history.GetRaw(HistoriesFieldDetails))
+
+	var arr [6]int
+	for i := 0; i < 6 && i < len(details); i++ {
+		arr[i] = details[i]
+	}
+
+	return arr
+}
+
+func (history *Histories) SetDetails(value [6]int) {
+	history.Set(HistoriesFieldDetails, value)
+}
+
+func (history *Histories) Created() types.DateTime {
+	return history.GetDateTime(HistoriesFieldCreated)
+}
+
+func (history *Histories) Updated() types.DateTime {
+	return history.GetDateTime(HistoriesFieldUpdated)
 }

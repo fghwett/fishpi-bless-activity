@@ -24,6 +24,10 @@ const (
 	PrizeLevelZYLiuBo4    PrizeLevel = 12 // 状元六勃红（6个4点）
 )
 
+func (level PrizeLevel) IsTop() bool {
+	return level >= PrizeLevelZSiDianHong
+}
+
 // PrizeLevelName 奖励等级名称映射
 var PrizeLevelName = map[PrizeLevel]string{
 	PrizeLevelNone:        "无奖",
