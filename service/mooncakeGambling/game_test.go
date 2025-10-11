@@ -205,3 +205,38 @@ func TestMooncakeGame_ProbabilityStatistics(t *testing.T) {
 		t.Logf("警告: 状元级别奖励概率似乎偏高 (%.4f%%)", champProbability)
 	}
 }
+
+func TestCompareGameResult(t *testing.T) {
+	game := NewMooncakeGame()
+
+	tests := []struct {
+		name   string
+		a      [6]int
+		b      [6]int
+		expect int // CompareGameResult(a,b)
+	}{
+		{"四进_sum小于", [6]int{2, 2, 2, 2, 6, 1}, [6]int{2, 2, 2, 2, 5, 6}, -1},
+		{"一秀_sum较大", [6]int{4, 6, 5, 3, 2, 1}, [6]int{4, 5, 5, 3, 2, 1}, 1},
+		{"二举_sum相等_逐位比较", [6]int{4, 4, 6, 2, 1, 1}, [6]int{4, 4, 5, 3, 1, 1}, 1},
+		{"二举_完全相同_平局", [6]int{4, 4, 6, 2, 1, 1}, [6]int{4, 4, 1, 6, 2, 1}, 0},
+		{"对堂_平局", [6]int{1, 2, 3, 4, 5, 6}, [6]int{6, 5, 4, 3, 2, 1}, 0},
+		{"无奖_sum相等_逐位比较", [6]int{6, 6, 2, 2, 1, 1}, [6]int{6, 5, 2, 2, 2, 1}, 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := game.PlayWithDices(tt.a)
+			b := game.PlayWithDices(tt.b)
+			got := CompareGameResult(a, b)
+			if got != tt.expect {
+				t.Errorf("%s: CompareGameResult(%v,%v) = %d, expect %d; a.level=%d b.level=%d",
+					tt.name, tt.a, tt.b, got, tt.expect, a.PrizeLevel, b.PrizeLevel)
+			}
+			// 反向比较应为相反结果
+			rev := CompareGameResult(b, a)
+			if rev != -tt.expect {
+				t.Errorf("%s: reverse CompareGameResult(%v,%v) = %d, expect %d", tt.name, tt.b, tt.a, rev, -tt.expect)
+			}
+		})
+	}
+}

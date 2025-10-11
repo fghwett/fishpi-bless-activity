@@ -180,8 +180,7 @@ func (g *MooncakeGame) PlayWithDices(dices [6]int) GameResult {
 	}
 }
 
-// ComparePrize 比较两个奖励等级的大小
-// 返回值：1表示a>b，-1表示a<b，0表示a==b
+// ComparePrize 保留旧的按等级比较接口（兼容）
 func ComparePrize(a, b PrizeLevel) int {
 	if a > b {
 		return 1
@@ -191,9 +190,140 @@ func ComparePrize(a, b PrizeLevel) int {
 	return 0
 }
 
-// SortResults 对游戏结果按奖励等级排序（从高到低）
+// extrasForLevel 返回在同级比较时应当参与比较的“多余骰子”列表（未排序）
+func extrasForLevel(dices [6]int, level PrizeLevel) []int {
+	counts := make(map[int]int)
+	for _, d := range dices {
+		counts[d]++
+	}
+
+	mainVals := make(map[int]bool)
+	switch level {
+	case PrizeLevelZYLiuBo4:
+		mainVals[4] = true
+	case PrizeLevelZYJinHua:
+		mainVals[4] = true // 4为主，1为次
+	case PrizeLevelZBianDiJin:
+		mainVals[1] = true
+	case PrizeLevelZYHeiLiuBo:
+		for v, c := range counts {
+			if c == 6 && v != 1 && v != 4 {
+				mainVals[v] = true
+				break
+			}
+		}
+	case PrizeLevelZYWuHong:
+		mainVals[4] = true
+	case PrizeLevelZYWuZi:
+		for v, c := range counts {
+			if c == 5 && v != 4 {
+				mainVals[v] = true
+				break
+			}
+		}
+	case PrizeLevelZSiDianHong:
+		mainVals[4] = true
+	case PrizeLevelDuiTang:
+		// 对堂没有多余骰子
+	case PrizeLevelSanHong:
+		mainVals[4] = true
+	case PrizeLevelSiJin:
+		for v, c := range counts {
+			if c == 4 && v != 4 {
+				mainVals[v] = true
+				break
+			}
+		}
+	case PrizeLevelErJu:
+		mainVals[4] = true
+	case PrizeLevelYiXiu:
+		mainVals[4] = true
+	case PrizeLevelNone:
+		// 无奖：所有骰子都为多余骰子
+	default:
+		// 默认把所有当作多余
+	}
+
+	// 收集非主值的骰子（或当主值为空时收集全部）
+	extras := make([]int, 0)
+	if len(mainVals) == 0 {
+		for _, d := range dices {
+			extras = append(extras, d)
+		}
+		return extras
+	}
+	for _, d := range dices {
+		if !mainVals[d] {
+			extras = append(extras, d)
+		}
+	}
+	return extras
+}
+
+// sumInts 计算整数切片总和
+func sumInts(arr []int) int {
+	s := 0
+	for _, v := range arr {
+		s += v
+	}
+	return s
+}
+
+// CompareGameResult 按用户要求比较两个 GameResult：先比较等级，再比较多余骰子之和，若相同则对多余骰子降序逐位比较
+// 返回 1 表示 a>b，-1 表示 a<b，0 表示相等
+func CompareGameResult(a, b GameResult) int {
+	// 先比较等级
+	if a.PrizeLevel > b.PrizeLevel {
+		return 1
+	} else if a.PrizeLevel < b.PrizeLevel {
+		return -1
+	}
+
+	// 相同等级时比较多余骰子
+	exA := extrasForLevel(a.Dices, a.PrizeLevel)
+	exB := extrasForLevel(b.Dices, b.PrizeLevel)
+
+	sumA := sumInts(exA)
+	sumB := sumInts(exB)
+	if sumA > sumB {
+		return 1
+	} else if sumA < sumB {
+		return -1
+	}
+
+	// 若和相等，则将多余骰子从大到小排序后逐位比较
+	sort.Slice(exA, func(i, j int) bool { return exA[i] > exA[j] })
+	sort.Slice(exB, func(i, j int) bool { return exB[i] > exB[j] })
+	// 比较长度时，长度较长且前缀相同的视为更大（不过长度应相同）
+	maxLen := len(exA)
+	if len(exB) > maxLen {
+		maxLen = len(exB)
+	}
+	for i := 0; i < maxLen; i++ {
+		var va, vb int
+		if i < len(exA) {
+			va = exA[i]
+		} else {
+			va = 0
+		}
+		if i < len(exB) {
+			vb = exB[i]
+		} else {
+			vb = 0
+		}
+		if va > vb {
+			return 1
+		} else if va < vb {
+			return -1
+		}
+	}
+
+	return 0
+}
+
+// SortResults 对游戏结果按奖励等级 + 多余骰子规则排序（从高到低）
 func SortResults(results []GameResult) {
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].PrizeLevel > results[j].PrizeLevel
+		return CompareGameResult(results[i], results[j]) > 0
 	})
 }
