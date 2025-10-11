@@ -21,6 +21,7 @@ const (
 	UsersFieldEmailVisibility = "emailVisibility"
 	UsersFieldVerified        = "verified"
 	UsersFieldName            = "name"
+	UsersFieldNickname        = "nickname"
 	UsersFieldAvatar          = "avatar"
 	UsersFieldOId             = "oId"
 	UsersFieldCreated         = "created"
@@ -48,6 +49,14 @@ func (user *User) Name() string {
 
 func (user *User) SetName(value string) {
 	user.Set(UsersFieldName, value)
+}
+
+func (user *User) Nickname() string {
+	return user.GetString(UsersFieldNickname)
+}
+
+func (user *User) SetNickname(value string) {
+	user.Set(UsersFieldNickname, value)
 }
 
 func (user *User) Avatar() string {
@@ -114,8 +123,6 @@ func (config *Config) SetValue(value string) {
 const (
 	DbNameArticles              = "articles"
 	ArticlesFieldUserId         = "userId"
-	ArticlesFieldUserName       = "userName"
-	ArticlesFieldUserAvatar     = "userAvatar"
 	ArticlesFieldOId            = "oId"
 	ArticlesFieldTitle          = "title"
 	ArticlesFieldPreviewContent = "previewContent"
@@ -151,22 +158,6 @@ func (article *Article) UserId() string {
 
 func (article *Article) SetUserId(value string) {
 	article.Set(ArticlesFieldUserId, value)
-}
-
-func (article *Article) UserName() string {
-	return article.GetString(ArticlesFieldUserName)
-}
-
-func (article *Article) SetUserName(value string) {
-	article.Set(ArticlesFieldUserName, value)
-}
-
-func (article *Article) UserAvatar() string {
-	return article.GetString(ArticlesFieldUserAvatar)
-}
-
-func (article *Article) SetUserAvatar(value string) {
-	article.Set(ArticlesFieldUserAvatar, value)
 }
 
 func (article *Article) OId() string {

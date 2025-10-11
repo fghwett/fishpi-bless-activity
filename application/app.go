@@ -1,6 +1,9 @@
 package application
 
 import (
+	"bless-activity/service"
+	"bless-activity/service/fishpi"
+
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
@@ -44,6 +47,15 @@ func (application *Application) Start() error {
 }
 
 func (application *Application) init(event *core.BootstrapEvent) error {
+
+	fishPiService, err := fishpi.NewService(event.App)
+	if err != nil {
+		return err
+	}
+
+	// 文章爬取服务
+	articleService := service.NewArticleService(event.App, fishPiService)
+	go articleService.FetchArticles()
 
 	// 注册路由
 	application.registerRoutes()
