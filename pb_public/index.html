@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>福利活动 - 文章排行榜 & 博饼抽奖</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui@2.8.18/dist/css/layui.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1E9FFF;
+        }
+
+        /* 博饼区域样式 */
+        .mooncake-section {
+            display: flex;
+            gap: 20px;
+            min-height: 600px;
+        }
+        .prize-panel {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        .prize-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #1E9FFF;
+            transition: all 0.3s;
+        }
+        .prize-item:hover {
+            box-shadow: 0 2px 10px rgba(30,159,255,0.3);
+            transform: translateX(5px);
+        }
+        .prize-level {
+            font-weight: bold;
+            color: #1E9FFF;
+            margin-bottom: 5px;
+        }
+        .prize-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .dice-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 30px;
+            position: relative;
+        }
+        .dice-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .dice {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .dice.rolling {
+            animation: roll 0.5s infinite;
+        }
+        @keyframes roll {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+        }
+        .result-display {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+        .result-prize {
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .result-level {
+            font-size: 18px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        /* SVG骰子样式 */
+        .dice-svg-container {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .dice-svg {
+            width: 40px;
+            height: 40px;
+        }
+        .history-dices .dice-svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .history-panel {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        .history-item {
+            background: white;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            border-left: 3px solid #FFB800;
+        }
+        .history-time {
+            color: #999;
+            font-size: 11px;
+        }
+        .history-result {
+            color: #1E9FFF;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .history-dices {
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 文章排行榜部分 -->
+        <div class="section">
+            <div class="section-title">
+                <i class="layui-icon layui-icon-chart"></i> 文章排行榜
+            </div>
+            <table class="layui-hide" id="articleTable" lay-filter="articleTable"></table>
+        </div>
+
+        <!-- 博饼抽奖部分 -->
+        <div class="section">
+            <div class="section-title">
+                <i class="layui-icon layui-icon-gift"></i> 博饼抽奖
+            </div>
+            <div class="mooncake-section">
+                <!-- 左侧：奖励列表 -->
+                <div class="prize-panel">
+                    <h3 style="margin-bottom: 15px; color: #333;">🎁 奖励列表</h3>
+                    <div class="prize-item">
+                        <div class="prize-level">状元六勃红</div>
+                        <div class="prize-desc">6个4点 - 最高奖励</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元插金花</div>
+                        <div class="prize-desc">4个4点+2个1点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元遍地锦</div>
+                        <div class="prize-desc">6个1点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元黑六勃</div>
+                        <div class="prize-desc">6个相同点数（非1,4点）</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元五红</div>
+                        <div class="prize-desc">5个4点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元五子登科</div>
+                        <div class="prize-desc">5个相同点数（非4点）</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">状元四点红</div>
+                        <div class="prize-desc">4个4点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">对堂</div>
+                        <div class="prize-desc">1~6各1个</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">三红</div>
+                        <div class="prize-desc">3个4点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">四进</div>
+                        <div class="prize-desc">4个相同点数（非4点）</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">二举</div>
+                        <div class="prize-desc">2个4点</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="prize-level">一秀</div>
+                        <div class="prize-desc">1个4点</div>
+                    </div>
+                </div>
+
+                <!-- 中间：博饼区域 -->
+                <div class="dice-area">
+                    <h2 style="color: white; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                        🎲 博饼游戏
+                    </h2>
+                    <div class="dice-container">
+                        <div class="dice" id="dice1">?</div>
+                        <div class="dice" id="dice2">?</div>
+                        <div class="dice" id="dice3">?</div>
+                        <div class="dice" id="dice4">?</div>
+                        <div class="dice" id="dice5">?</div>
+                        <div class="dice" id="dice6">?</div>
+                    </div>
+                    <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
+                        <i class="layui-icon layui-icon-play"></i> 开始博饼
+                    </button>
+                    <div class="result-display" id="resultDisplay" style="display: none;">
+                        <div class="result-prize" id="resultPrize"></div>
+                        <div class="result-level" id="resultLevel"></div>
+                        <div class="dice-svg-container" id="resultDices"></div>
+                    </div>
+                </div>
+
+                <!-- 右侧：博饼记录 -->
+                <div class="history-panel">
+                    <h3 style="margin-bottom: 15px; color: #333;">📜 博饼记录</h3>
+                    <div id="historyList">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            暂无记录，快来试试手气吧！
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/layui@2.8.18/dist/layui.js"></script>
+    <script>
+        layui.use(['table', 'layer'], function(){
+            var table = layui.table;
+            var layer = layui.layer;
+
+            // 文章排行榜表格
+            table.render({
+                elem: '#articleTable',
+                url: '/api/collections/articles/records?expand=userId&sort=-createdAt',
+                height: 500,
+                page: true,
+                limit: 10,
+                limits: [10, 20, 50, 100],
+                cols: [[
+                    {field: 'title', title: '文章标题', width: 350, templet: function(d){
+                        return '<a href="https://fishpi.cn/article/' + d.oId + '" target="_blank" style="color: #1E9FFF; text-decoration: none;">' + d.title + '</a>';
+                    }},
+                    {field: 'expand', title: '作者', width: 200, templet: function(d){
+                        if(d.expand && d.expand.userId) {
+                            const user = d.expand.userId;
+                            const displayName = user.nickname || user.name || '-';
+                            const memberName = user.name || '';
+                            const avatar = user.avatar || '';
+                            const avatarHtml = '<img src="' + avatar + '" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />';
+                            if(memberName) {
+                                const memberUrl = 'https://fishpi.cn/member/' + encodeURIComponent(memberName);
+                                return '<a href="' + memberUrl + '" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">' +
+                                       avatarHtml +
+                                       '<span>' + displayName + '</span>' +
+                                       '</a>';
+                            }
+                            return '<div style="display: flex; align-items: center; gap: 8px;">' + avatarHtml + '<span>' + displayName + '</span></div>';
+                        }
+                        return '-';
+                    }},
+                    {field: 'viewCount', title: '浏览量', width: 100, sort: true},
+                    {field: 'goodCnt', title: '点赞量', width: 100, sort: true},
+                    {field: 'commentCount', title: '评论数', width: 100, sort: true},
+                    {field: 'collectCnt', title: '收藏量', width: 100, sort: true},
+                    {field: 'thankCnt', title: '感谢数', width: 100, sort: true},
+                    {field: 'created', title: '创建时间', width: 180, sort: true, templet: function(d){
+                        // prefer createdAt (original article timestamp) and fall back to created (PB metadata)
+                        return formatDate(d.createdAt || d.created);
+                     }},
+                     {field: 'updated', title: '更新时间', width: 180, sort: true, templet: function(d){
+                        return formatDate(d.updatedAt || d.updated);
+                     }}
+                ]],
+                parseData: function(res){
+                    return {
+                        "code": 0,
+                        "msg": "",
+                        "count": res.totalItems,
+                        "data": res.items
+                    };
+                }
+            });
+
+            // 博饼游戏逻辑
+            let isRolling = false;
+            let history = [];
+
+            document.getElementById('rollBtn').addEventListener('click', function(){
+                if(isRolling) return;
+
+                isRolling = true;
+                document.getElementById('resultDisplay').style.display = 'none';
+
+                // 骰子动画
+                const dices = document.querySelectorAll('.dice');
+                dices.forEach(dice => {
+                    dice.classList.add('rolling');
+                    dice.textContent = '?';
+                });
+
+                // 模拟掷骰子
+                setTimeout(() => {
+                    const result = rollDices();
+
+                    // 在骰子格子中显示SVG图标
+                    dices.forEach((dice, index) => {
+                        dice.classList.remove('rolling');
+                        dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
+                    });
+
+                    // 显示结果
+                    document.getElementById('resultDisplay').style.display = 'block';
+                    document.getElementById('resultPrize').textContent = result.prizeName;
+
+                    // 添加到历史记录
+                    addHistory(result);
+
+                    isRolling = false;
+
+                    // 显示提示
+                    layer.msg('恭喜获得：' + result.prizeName, {icon: 1, time: 2000});
+                }, 1500);
+            });
+
+            // 模拟掷骰子
+            function rollDices() {
+                const dices = [];
+                for(let i = 0; i < 6; i++) {
+                    dices.push(Math.floor(Math.random() * 6) + 1);
+                }
+
+                const prize = calculatePrize(dices);
+                return {
+                    dices: dices,
+                    prizeName: prize.name,
+                    prizeLevel: prize.level
+                };
+            }
+
+            // 计算奖励
+            function calculatePrize(dices) {
+                const counts = {};
+                dices.forEach(d => {
+                    counts[d] = (counts[d] || 0) + 1;
+                });
+
+                const count4 = counts[4] || 0;
+
+                if(count4 === 6) return {name: '状元六勃红', level: 12};
+                if(count4 === 4 && counts[1] === 2) return {name: '状元插金花', level: 11};
+                if(counts[1] === 6) return {name: '状元遍地锦', level: 10};
+
+                for(let d in counts) {
+                    const dn = Number(d);
+                    if(counts[d] === 6 && dn !== 1 && dn !== 4) {
+                        return {name: '状元黑六勃', level: 9};
+                    }
+                }
+
+                if(count4 === 5) return {name: '状元五红', level: 8};
+
+                for(let d in counts) {
+                    const dn = Number(d);
+                    if(counts[d] === 5 && dn !== 4) {
+                        return {name: '状元五子登科', level: 7};
+                    }
+                }
+
+                if(count4 === 4) return {name: '状元四点红', level: 6};
+
+                if(Object.keys(counts).length === 6) {
+                    let hasAll = true;
+                    for(let i = 1; i <= 6; i++) {
+                        if(counts[i] !== 1) hasAll = false;
+                    }
+                    if(hasAll) return {name: '对堂', level: 5};
+                }
+
+                if(count4 === 3) return {name: '三红', level: 4};
+
+                for(let d in counts) {
+                    const dn = Number(d);
+                    if(counts[d] === 4 && dn !== 4) {
+                        return {name: '四进', level: 3};
+                    }
+                }
+
+                if(count4 === 2) return {name: '二举', level: 2};
+                if(count4 === 1) return {name: '一秀', level: 1};
+
+                return {name: '无奖', level: 0};
+            }
+
+            // 添加历史记录
+            function addHistory(result) {
+                const now = new Date();
+                history.unshift({
+                    time: formatDate(now),
+                    result: result
+                });
+
+                // 只保留最近20条
+                if(history.length > 20) {
+                    history = history.slice(0, 20);
+                }
+
+                updateHistoryDisplay();
+            }
+
+            // 更新历史记录显示
+            function updateHistoryDisplay() {
+                const historyList = document.getElementById('historyList');
+                if(history.length === 0) {
+                    historyList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无记录</div>';
+                    return;
+                }
+
+                historyList.innerHTML = history.map(h => `
+                    <div class="history-item">
+                        <div class="history-time">${h.time}</div>
+                        <div class="history-result">${h.result.prizeName}</div>
+                        <div class="history-dices" style="display: flex; align-items: center; gap: 3px;">
+                            ${h.result.dices.map(d => `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(d)}" alt="dice-${d}" class="dice-svg" />`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 格式化日期
+            function formatDate(date) {
+                if(!date) return '-';
+                // Accept Date or various string formats from API. Normalize strings like "YYYY-MM-DD hh:mm:ss.sssZ" -> "YYYY-MM-DDThh:mm:ss.sssZ"
+                try {
+                    if(typeof date === 'string') {
+                        let s = date.trim();
+                        // if contains space and no 'T', replace first space with 'T'
+                        if(s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
+                            s = s.replace(' ', 'T');
+                        }
+                        date = new Date(s);
+                    }
+
+                    if(!(date instanceof Date) || isNaN(date.getTime())) return '-';
+
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hour = String(date.getHours()).padStart(2, '0');
+                    const minute = String(date.getMinutes()).padStart(2, '0');
+                    const second = String(date.getSeconds()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+                } catch (e) {
+                    return '-';
+                }
+             }
+
+
+            // 获取骰子SVG的Base64编码
+            function getDiceSVGBase64(d) {
+                const svgs = {
+                    1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="#333"/></svg>`,
+                    2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
+                    3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="50" cy="50" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
+                    4: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="30" r="8" fill="#333"/><circle cx="30" cy="70" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
+                    5: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="30" r="8" fill="#333"/><circle cx="50" cy="50" r="8" fill="#333"/><circle cx="30" cy="70" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
+                    6: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="25" r="8" fill="#333"/><circle cx="70" cy="25" r="8" fill="#333"/><circle cx="30" cy="50" r="8" fill="#333"/><circle cx="70" cy="50" r="8" fill="#333"/><circle cx="30" cy="75" r="8" fill="#333"/><circle cx="70" cy="75" r="8" fill="#333"/></svg>`
+                };
+
+                return btoa(unescape(encodeURIComponent(svgs[d])));
+            }
+        });
+    </script>
+</body>
+</html>
