@@ -251,12 +251,65 @@ func (article *Article) Updated() types.DateTime {
 }
 
 const (
+	DbNameRewards      = "rewards"
+	RewardsFieldName   = "name"
+	RewardsFieldPoint  = "point"
+	RewardsFieldAmount = "amount"
+	RewardsFiledMore   = "more"
+)
+
+type Reward struct {
+	core.BaseRecordProxy
+}
+
+func NewReward(record *core.Record) *Reward {
+	reward := new(Reward)
+	reward.SetProxyRecord(record)
+	return reward
+}
+
+func NewRewardFromCollection(collection *core.Collection) *Reward {
+	record := core.NewRecord(collection)
+	return NewReward(record)
+}
+
+func (reward *Reward) Name() string {
+	return reward.GetString(RewardsFieldName)
+}
+
+func (reward *Reward) SetName(value string) {
+	reward.Set(RewardsFieldName, value)
+}
+
+func (reward *Reward) Point() int {
+	return reward.GetInt(RewardsFieldPoint)
+}
+
+func (reward *Reward) SetPoint(value int) {
+	reward.Set(RewardsFieldPoint, value)
+}
+
+func (reward *Reward) Amount() int {
+	return reward.GetInt(RewardsFieldAmount)
+}
+
+func (reward *Reward) SetAmount(value int) {
+	reward.Set(RewardsFieldAmount, value)
+}
+
+func (reward *Reward) More() string {
+	return reward.GetString(RewardsFiledMore)
+}
+
+func (reward *Reward) SetMore(value string) {
+	reward.Set(RewardsFiledMore, value)
+}
+
+const (
 	DbNameAwards           = "awards"
 	AwardsFieldLevel       = "level"
 	AwardsFieldName        = "name"
-	AwardsFieldAlias       = "alias"
-	AwardsFieldPoint       = "point"
-	AwardsFieldAmount      = "amount"
+	AwardsFieldRewardId    = "rewardId"
 	AwardsFieldDescription = "description"
 )
 
@@ -291,28 +344,12 @@ func (award *Awards) SetName(value string) {
 	award.Set(AwardsFieldName, value)
 }
 
-func (award *Awards) Alias() string {
-	return award.GetString(AwardsFieldAlias)
+func (award *Awards) RewardId() string {
+	return award.GetString(AwardsFieldRewardId)
 }
 
-func (award *Awards) SetAlias(value string) {
-	award.Set(AwardsFieldAlias, value)
-}
-
-func (award *Awards) Point() int {
-	return award.GetInt(AwardsFieldPoint)
-}
-
-func (award *Awards) SetPoint(value int) {
-	award.Set(AwardsFieldPoint, value)
-}
-
-func (award *Awards) Amount() int {
-	return award.GetInt(AwardsFieldAmount)
-}
-
-func (award *Awards) SetAmount(value int) {
-	award.Set(AwardsFieldAmount, value)
+func (award *Awards) SetRewardId(value string) {
+	award.Set(AwardsFieldRewardId, value)
 }
 
 func (award *Awards) Description() string {
