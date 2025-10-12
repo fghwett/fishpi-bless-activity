@@ -252,6 +252,7 @@ func (article *Article) Updated() types.DateTime {
 
 const (
 	DbNameRewards      = "rewards"
+	RewardsFieldLevel  = "level"
 	RewardsFieldName   = "name"
 	RewardsFieldPoint  = "point"
 	RewardsFieldAmount = "amount"
@@ -271,6 +272,14 @@ func NewReward(record *core.Record) *Reward {
 func NewRewardFromCollection(collection *core.Collection) *Reward {
 	record := core.NewRecord(collection)
 	return NewReward(record)
+}
+
+func (reward *Reward) Level() int {
+	return reward.GetInt(RewardsFieldLevel)
+}
+
+func (reward *Reward) SetLevel(value int) {
+	reward.Set(RewardsFieldLevel, value)
 }
 
 func (reward *Reward) Name() string {

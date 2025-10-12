@@ -34,41 +34,49 @@
         /* 博饼区域样式 */
         .mooncake-section {
             display: flex;
+            flex-direction: column;
             gap: 20px;
-            min-height: 600px;
         }
         .prize-panel {
-            flex: 1;
+            width: 100%;
             background: #f8f9fa;
             border-radius: 8px;
             padding: 15px;
             overflow-y: auto;
-            max-height: 600px;
+            max-height: 400px;
         }
-        .prize-item {
+        .prize-table {
+            width: 100%;
+            border-collapse: collapse;
             background: white;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid #1E9FFF;
-            transition: all 0.3s;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .prize-item:hover {
-            box-shadow: 0 2px 10px rgba(30,159,255,0.3);
-            transform: translateX(5px);
+        .prize-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
-        .prize-level {
+        .prize-table th {
+            padding: 12px 10px;
+            text-align: left;
             font-weight: bold;
-            color: #1E9FFF;
-            margin-bottom: 5px;
+            font-size: 14px;
         }
-        .prize-desc {
-            font-size: 12px;
-            color: #666;
+        .prize-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        .prize-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .prize-table tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .dice-area {
-            flex: 2;
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -77,6 +85,7 @@
             border-radius: 8px;
             padding: 30px;
             position: relative;
+            min-height: 400px;
         }
         .dice-container {
             display: grid;
@@ -141,12 +150,12 @@
         }
 
         .history-panel {
-            flex: 1;
+            width: 100%;
             background: #f8f9fa;
             border-radius: 8px;
             padding: 15px;
             overflow-y: auto;
-            max-height: 600px;
+            max-height: 400px;
         }
         .history-item {
             background: white;
@@ -193,54 +202,23 @@
                 <!-- 左侧：奖励列表 -->
                 <div class="prize-panel">
                     <h3 style="margin-bottom: 15px; color: #333;">🎁 奖励列表</h3>
-                    <div class="prize-item">
-                        <div class="prize-level">状元六勃红</div>
-                        <div class="prize-desc">6个4点 - 最高奖励</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元插金花</div>
-                        <div class="prize-desc">4个4点+2个1点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元遍地锦</div>
-                        <div class="prize-desc">6个1点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元黑六勃</div>
-                        <div class="prize-desc">6个相同点数（非1,4点）</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元五红</div>
-                        <div class="prize-desc">5个4点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元五子登科</div>
-                        <div class="prize-desc">5个相同点数（非4点）</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">状元四点红</div>
-                        <div class="prize-desc">4个4点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">对堂</div>
-                        <div class="prize-desc">1~6各1个</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">三红</div>
-                        <div class="prize-desc">3个4点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">四进</div>
-                        <div class="prize-desc">4个相同点数（非4点）</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">二举</div>
-                        <div class="prize-desc">2个4点</div>
-                    </div>
-                    <div class="prize-item">
-                        <div class="prize-level">一秀</div>
-                        <div class="prize-desc">1个4点</div>
-                    </div>
+                    <table class="prize-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">奖项名称</th>
+                                <th style="width: 200px;">奖项描述</th>
+                                <th style="width: 150px;">奖励</th>
+                                <th style="width: 80px;">积分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #999; padding: 20px;">
+                                    暂无奖励可显示
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- 中间：博饼区域 -->
@@ -284,6 +262,75 @@
         layui.use(['table', 'layer'], function(){
             var table = layui.table;
             var layer = layui.layer;
+
+            // 全局奖励数据
+            let rewardsData = [];
+
+            // 加载奖励列表
+            function loadRewards() {
+                fetch('/api/collections/rewards/records?expand=awards_via_rewardId&sort=-level')
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.items && data.items.length > 0) {
+                            rewardsData = data.items;
+                            renderRewardsList();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载奖励列表失败:', error);
+                        layer.msg('奖励列表加载失败', {icon: 2});
+                    });
+            }
+
+            // 渲染奖励列表
+            function renderRewardsList() {
+                const prizeTableBody = document.querySelector('.prize-table tbody');
+                if(!prizeTableBody) return;
+
+                // 清空现有内容
+                prizeTableBody.innerHTML = '';
+
+                if(rewardsData.length === 0) {
+                    prizeTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999; padding: 20px;">暂无奖励数据</td></tr>';
+                    return;
+                }
+
+                // 遍历每个 reward（已经按 level 倒序）
+                rewardsData.forEach(reward => {
+                    const awards = reward.expand && reward.expand.awards_via_rewardId ? reward.expand.awards_via_rewardId : [];
+
+                    // 按 award level 排序
+                    awards.sort((a, b) => (b.level || 0) - (a.level || 0));
+
+                    // 如果没有关联的 awards，也显示 reward 信息
+                    if(awards.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="font-weight: bold; color: #1E9FFF;">-</td>
+                            <td style="font-size: 12px; color: #666;">-</td>
+                            <td style="font-weight: bold; color: #FF5722;">${reward.name}</td>
+                            <td style="font-weight: 500; color: #1E9FFF;">${reward.point || 0}</td>
+                        `;
+                        prizeTableBody.appendChild(row);
+                        return;
+                    }
+
+                    // 为每个 award 创建一行，显示完整的 award 和 reward 信息
+                    awards.forEach(award => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="font-weight: bold; color: #1E9FFF;">${award.name || '-'}</td>
+                            <td style="font-size: 12px; color: #666;">${award.description || '-'}</td>
+                            <td style="font-weight: bold; color: #FF5722;">${reward.name}</td>
+                            <td style="font-weight: 500; color: #1E9FFF;">${reward.point || 0}</td>
+                        `;
+                        prizeTableBody.appendChild(row);
+                    });
+                });
+            }
+
+            // 页面加载时获取奖励数据
+            loadRewards();
 
             // 文章排行榜表格
             table.render({
