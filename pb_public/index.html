@@ -205,15 +205,17 @@
                     <table class="prize-table">
                         <thead>
                             <tr>
-                                <th style="width: 150px;">奖项名称</th>
+                                <th style="width: 100px;">奖励等级</th>
+                                <th style="width: 120px;">奖项名称</th>
                                 <th style="width: 200px;">奖项描述</th>
-                                <th style="width: 150px;">奖励</th>
                                 <th style="width: 80px;">积分</th>
+                                <th style="width: 80px;">数量</th>
+                                <th style="width: 150px;">备注</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td colspan="4" style="text-align: center; color: #999; padding: 20px;">
+                                <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
                                     暂无奖励可显示
                                 </td>
                             </tr>
@@ -291,7 +293,7 @@
                 prizeTableBody.innerHTML = '';
 
                 if(rewardsData.length === 0) {
-                    prizeTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999; padding: 20px;">暂无奖励数据</td></tr>';
+                    prizeTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999; padding: 20px;">暂无奖励数据</td></tr>';
                     return;
                 }
 
@@ -299,31 +301,72 @@
                 rewardsData.forEach(reward => {
                     const awards = reward.expand && reward.expand.awards_via_rewardId ? reward.expand.awards_via_rewardId : [];
 
-                    // 按 award level 排序
+                    // 按 award level 排序（倒序）
                     awards.sort((a, b) => (b.level || 0) - (a.level || 0));
 
-                    // 如果没有关联的 awards，也显示 reward 信息
+                    // 如果没有关联的 awards，显示一行reward信息
                     if(awards.length === 0) {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td style="font-weight: bold; color: #1E9FFF;">-</td>
-                            <td style="font-size: 12px; color: #666;">-</td>
-                            <td style="font-weight: bold; color: #FF5722;">${reward.name}</td>
-                            <td style="font-weight: 500; color: #1E9FFF;">${reward.point || 0}</td>
+                            <td style="font-weight: bold; color: #FF5722; font-size: 16px; text-align: center; vertical-align: middle;">${reward.name}</td>
+                            <td style="color: #999; text-align: center;">-</td>
+                            <td style="color: #999; text-align: center;">-</td>
+                            <td style="font-weight: 500; color: #1E9FFF; text-align: center;">${reward.point || 0}</td>
+                            <td style="color: #999; text-align: center;">${reward.amount || '-'}</td>
+                            <td style="color: #999; text-align: center; font-size: 12px;">${reward.more || '-'}</td>
                         `;
                         prizeTableBody.appendChild(row);
                         return;
                     }
 
-                    // 为每个 award 创建一行，显示完整的 award 和 reward 信息
-                    awards.forEach(award => {
+                    // 为每个 award 创建一行
+                    awards.forEach((award, index) => {
                         const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td style="font-weight: bold; color: #1E9FFF;">${award.name || '-'}</td>
-                            <td style="font-size: 12px; color: #666;">${award.description || '-'}</td>
-                            <td style="font-weight: bold; color: #FF5722;">${reward.name}</td>
-                            <td style="font-weight: 500; color: #1E9FFF;">${reward.point || 0}</td>
-                        `;
+
+                        // 第一行需要添加 rowspan 的奖励等级列
+                        if(index === 0) {
+                            const rewardCell = document.createElement('td');
+                            rewardCell.rowSpan = awards.length;
+                            rewardCell.style.cssText = 'font-weight: bold; color: #FF5722; font-size: 16px; text-align: center; vertical-align: middle; border-right: 2px solid #eee;';
+                            rewardCell.textContent = reward.name;
+                            row.appendChild(rewardCell);
+                        }
+
+                        // 奖项名称
+                        const nameCell = document.createElement('td');
+                        nameCell.style.cssText = 'font-weight: bold; color: #1E9FFF;';
+                        nameCell.textContent = award.name || '-';
+                        row.appendChild(nameCell);
+
+                        // 奖项描述
+                        const descCell = document.createElement('td');
+                        descCell.style.cssText = 'font-size: 12px; color: #666;';
+                        descCell.textContent = award.description || '-';
+                        row.appendChild(descCell);
+
+                        // 积分（只在第一行显示，使用rowspan）
+                        if(index === 0) {
+                            const pointCell = document.createElement('td');
+                            pointCell.rowSpan = awards.length;
+                            pointCell.style.cssText = 'font-weight: 500; color: #1E9FFF; text-align: center; vertical-align: middle; font-size: 16px;';
+                            pointCell.textContent = reward.point || 0;
+                            row.appendChild(pointCell);
+
+                            // 数量（amount）
+                            const amountCell = document.createElement('td');
+                            amountCell.rowSpan = awards.length;
+                            amountCell.style.cssText = 'font-weight: 500; color: #666; text-align: center; vertical-align: middle;';
+                            amountCell.textContent = reward.amount || '-';
+                            row.appendChild(amountCell);
+
+                            // 备注（more）
+                            const moreCell = document.createElement('td');
+                            moreCell.rowSpan = awards.length;
+                            moreCell.style.cssText = 'color: #999; text-align: left; vertical-align: middle; font-size: 12px;';
+                            moreCell.textContent = reward.more || '-';
+                            row.appendChild(moreCell);
+                        }
+
                         prizeTableBody.appendChild(row);
                     });
                 });
