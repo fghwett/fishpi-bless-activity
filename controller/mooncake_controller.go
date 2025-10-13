@@ -148,6 +148,43 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 	history.SetIsTop(result.PrizeLevel.IsTop())
 	history.SetDetails(result.Dices)
 
+	// 如果是 top 等级，处理 isBest 比较逻辑：
+	// - 查找用户最新的一条 isBest 记录（按时间倒序）
+	// - 若不存在，则将当前记录标记为 isBest
+	// - 若存在，则使用 details() 数据构造 GameResult 并通过 CompareGameResult 比较，较大的为 isBest
+	if result.PrizeLevel.IsTop() {
+		prevBest := new(model.Histories)
+		if err := controller.app.RecordQuery(model.DbNameHistories).
+			Where(dbx.HashExp{
+				model.HistoriesFieldUserId: user.Id,
+				model.HistoriesFieldIsBest: true,
+			}).
+			OrderBy(model.HistoriesFieldCreated + " desc").
+			Limit(1).
+			One(prevBest); err != nil {
+			// 没有找到之前的 isBest（或查询失败）——把当前标记为 isBest
+			history.SetIsBest(true)
+		} else {
+			// 找到之前的最佳记录，按规则比较两次结果
+			prevResult := controller.game.PlayWithDices(prevBest.Details())
+			compare := mooncakeGambling.CompareGameResult(result, prevResult)
+			if compare > 0 {
+				// 当前更好：取消之前的 isBest，并将当前设为 isBest
+				prevBest.SetIsBest(false)
+				if err := controller.app.Save(prevBest); err != nil {
+					logger.Error("取消之前 isBest 记录失败", slog.Any("err", err))
+					// 不中断流程
+				}
+				history.SetIsBest(true)
+			} else {
+				// 仍不如已有的最佳，当前不是 isBest
+				history.SetIsBest(false)
+			}
+		}
+	} else {
+		history.SetIsBest(false)
+	}
+
 	if err := controller.app.Save(history); err != nil {
 		logger.Error("保存历史记录失败", slog.Any("err", err))
 		return event.InternalServerError("保存历史记录失败", err)
