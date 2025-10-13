@@ -96,11 +96,12 @@
             overflow: hidden;
         }
         .dice-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            justify-content: center;
             gap: 15px;
             margin: 30px 0;
             max-width: 100%;
+            flex-wrap: wrap;
         }
         .dice {
             width: 80px;
@@ -306,11 +307,6 @@
                     <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
                         <i class="layui-icon layui-icon-play"></i> 开始博饼
                     </button>
-                    <div class="result-display" id="resultDisplay" style="display: none;">
-                        <div class="result-prize" id="resultPrize"></div>
-                        <div class="result-level" id="resultLevel"></div>
-                        <div class="dice-svg-container" id="resultDices"></div>
-                    </div>
                 </div>
 
                 <!-- 右侧：博饼记录 -->
@@ -503,57 +499,41 @@
                 if(isRolling) return;
 
                 isRolling = true;
-                document.getElementById('resultDisplay').style.display = 'none';
 
-                // 骰子动画
+                // 先生成所有骰子的结果
+                const result = rollDices();
                 const dices = document.querySelectorAll('.dice');
-                dices.forEach(dice => {
-                    dice.classList.add('rolling');
-                    dice.textContent = '?';
-                });
 
-                // 模拟掷骰子
-                setTimeout(() => {
-                    const result = rollDices();
+                // 依次让每个骰子摇动并显示结果
+                let completedCount = 0;
+                dices.forEach((dice, index) => {
+                    setTimeout(() => {
+                        // 开始摇动这个骰子
+                        dice.classList.add('rolling');
+                        dice.textContent = '?';
 
-                    // 在骰子格子中显示SVG图标
-                    dices.forEach((dice, index) => {
-                        dice.classList.remove('rolling');
-                        dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
-                    });
-
-                    // 显示结果区域
-                    document.getElementById('resultDisplay').style.display = 'block';
-                    document.getElementById('resultPrize').textContent = result.prizeName;
-
-                    // 清空并准备结果骰子容器
-                    const resultDicesContainer = document.getElementById('resultDices');
-                    resultDicesContainer.innerHTML = '';
-
-                    // 依次添加骰子，带有动画效果
-                    result.dices.forEach((diceValue, index) => {
+                        // 500ms后显示这个骰子的结果
                         setTimeout(() => {
-                            const img = document.createElement('img');
-                            img.src = `data:image/svg+xml;base64,${getDiceSVGBase64(diceValue)}`;
-                            img.alt = `dice-${diceValue}`;
-                            img.className = 'dice-svg';
-                            resultDicesContainer.appendChild(img);
+                            dice.classList.remove('rolling');
+                            dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
 
-                            // 添加show类触发动画
-                            setTimeout(() => {
-                                img.classList.add('show');
-                            }, 10);
-                        }, index * 150); // 每个骰子间隔150ms出现
-                    });
+                            completedCount++;
 
-                    // 添加到历史记录
-                    addHistory(result);
+                            // 所有骰子都完成后
+                            if(completedCount === 6) {
+                                // 添加到历史记录
+                                addHistory(result);
 
-                    isRolling = false;
+                                isRolling = false;
 
-                    // 显示提示
-                    layer.msg('恭喜获得：' + result.prizeName, {icon: 1, time: 2000});
-                }, 1500);
+                                // 显示提示
+                                setTimeout(() => {
+                                    layer.msg('恭喜获得：' + result.prizeName, {icon: 1, time: 2000});
+                                }, 200);
+                            }
+                        }, 500);
+                    }, index * 600); // 每个骰子间隔600ms开始摇动
+                });
             });
 
             // 模拟掷骰子
