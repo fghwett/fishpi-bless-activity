@@ -85,6 +85,10 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 
 	// 计算剩余次数
 	totalTimes := model.DefaultMooncakeGamblingTimes + article.ThankCnt()
+	// 限制最大次数为20次
+	if totalTimes > model.MaxMooncakeGamblingTimes {
+		totalTimes = model.MaxMooncakeGamblingTimes
+	}
 	restTimes := totalTimes - int(drawTimes)
 
 	if restTimes <= 0 {

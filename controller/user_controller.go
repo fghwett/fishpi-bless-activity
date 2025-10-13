@@ -72,7 +72,12 @@ func (controller *UserController) GetMe(event *core.RequestEvent) error {
 		return event.InternalServerError("查找抽奖次数失败", drawTimesErr)
 	}
 
-	restTimes := model.DefaultMooncakeGamblingTimes + article.ThankCnt() - int(drawTimes)
+	totalTimes := model.DefaultMooncakeGamblingTimes + article.ThankCnt()
+	// 限制最大次数为20次
+	if totalTimes > model.MaxMooncakeGamblingTimes {
+		totalTimes = model.MaxMooncakeGamblingTimes
+	}
+	restTimes := totalTimes - int(drawTimes)
 
 	return event.JSON(http.StatusOK, map[string]any{
 		"id":                              user.Id,
@@ -85,6 +90,7 @@ func (controller *UserController) GetMe(event *core.RequestEvent) error {
 		"article_title":                   article.Title(),
 		"article_thank_cnt":               article.ThankCnt(),
 		"default_mooncake_gambling_times": model.DefaultMooncakeGamblingTimes,
+		"max_mooncake_gambling_times":     model.MaxMooncakeGamblingTimes,
 		"draw_times":                      drawTimes,
 		"rest_times":                      restTimes,
 	})

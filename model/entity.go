@@ -2,6 +2,7 @@ package model
 
 const (
 	DefaultMooncakeGamblingTimes = 5
+	MaxMooncakeGamblingTimes     = 20
 )
 
 const (
