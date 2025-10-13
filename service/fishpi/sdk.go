@@ -19,7 +19,7 @@ func (service *Service) GetChatroomNodeGet() (*GetChatroomNodeGetResponse, error
 		return nil, err
 	}
 	if response.Code != 0 {
-		return nil, xerror.New(response.Msg)
+		return nil, xerror.New("%s", response.Msg)
 	}
 	for _, node := range response.Avaliable {
 		node.Node += fmt.Sprintf("?apiKey=%s", service.config.ApiKey)
@@ -43,7 +43,7 @@ func (service *Service) PostChatroomSend(req *PostChatroomSendRequest) (*PostCha
 		return nil, err
 	}
 	if response.Code != 0 {
-		return nil, xerror.New(response.Msg)
+		return nil, xerror.New("%s", response.Msg)
 	}
 	return response, nil
 }
@@ -70,7 +70,7 @@ func (service *Service) GetApiArticlesTag(tagName string, page int, size int) (*
 	}
 
 	if response.Code != 0 {
-		return nil, xerror.New(response.Msg)
+		return nil, xerror.New("%s", response.Msg)
 	}
 
 	return response, nil

@@ -195,6 +195,7 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 		"prize_level": int(result.PrizeLevel),
 		"prize_name":  result.PrizeName,
 		"rest_times":  restTimes - 1,
+		"times":       history.Times(),
 		"reward_id": func() string {
 			if reward != nil {
 				return reward.Id
@@ -253,6 +254,7 @@ func (controller *MooncakeController) GetHistory(event *core.RequestEvent) error
 
 		item := map[string]any{
 			"id":          h.Id,
+			"times":       h.Times(),
 			"dices":       h.Details(),
 			"prize_level": reward.Level(),
 			"prize_name":  reward.Name(),
