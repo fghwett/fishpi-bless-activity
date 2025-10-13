@@ -160,6 +160,198 @@
             border-left: 4px solid #ffc107;
         }
 
+        /* 文章列表样式 */
+        .article-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .article-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+        .article-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .article-card.my-article {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border: 2px solid #ffc107;
+        }
+        .article-rank {
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .article-rank.rank-1 {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+        .article-rank.rank-2 {
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+        }
+        .article-rank.rank-3 {
+            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+            box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+        }
+        .article-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .article-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .article-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .article-author-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #1E9FFF;
+        }
+        .article-author-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .article-author-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .article-author-nickname {
+            font-size: 12px;
+            color: #999;
+        }
+        .article-title-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .article-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+        .article-title:hover {
+            color: #1E9FFF;
+        }
+        .article-preview {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.6;
+        }
+        .article-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .article-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+        .article-stat-icon {
+            font-size: 16px;
+        }
+        .article-stat-label {
+            color: #999;
+        }
+        .article-stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .article-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        .article-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #FFB800 0%, #FF8C00 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(255, 184, 0, 0.3);
+        }
+        .article-loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .article-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 20px 0;
+        }
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background: #1E9FFF;
+            color: white;
+            border-color: #1E9FFF;
+        }
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-info {
+            font-size: 14px;
+            color: #666;
+        }
+
         /* 福签投票样式 */
         .vote-status-card {
             background: linear-gradient(135deg, #FFB800 0%, #FF8C00 100%);
@@ -511,7 +703,9 @@
             <div class="section-title">
                 <i class="layui-icon layui-icon-chart"></i> 文章排行榜
             </div>
-            <table class="layui-hide" id="articleTable" lay-filter="articleTable"></table>
+            <div class="article-list" id="articleTable">
+                <!-- 文章列表将通过JavaScript动态插入 -->
+            </div>
         </div>
 
         <!-- 博饼抽奖部分 -->
@@ -958,71 +1152,153 @@
                 });
             }
 
-            // 文章排行榜表格
-            function renderArticleTable() {
-                table.render({
-                    elem: '#articleTable',
-                    url: '/api/collections/articles/records?expand=userId&sort=-createdAt',
-                    height: 500,
-                    page: true,
-                    limit: 10,
-                    limits: [10, 20, 50, 100],
-                    cols: [[
-                        {field: 'title', title: '文章标题', width: 350, templet: function(d){
-                            return '<a href="https://fishpi.cn/article/' + d.oId + '" target="_blank" style="color: #1E9FFF; text-decoration: none;">' + d.title + '</a>';
-                        }},
-                        {field: 'expand', title: '作者', width: 200, templet: function(d){
-                            if(d.expand && d.expand.userId) {
-                                const user = d.expand.userId;
-                                const displayName = user.nickname || user.name || '-';
-                                const memberName = user.name || '';
-                                const avatar = user.avatar || '';
-                                const avatarHtml = '<img src="' + avatar + '" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" onerror="this.src=\'https://file.fishpi.cn/default-avatar.png\'" />';
-                                if(memberName) {
-                                    const memberUrl = 'https://fishpi.cn/member/' + encodeURIComponent(memberName);
-                                    return '<a href="' + memberUrl + '" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">' +
-                                           avatarHtml +
-                                           '<span>' + displayName + '</span>' +
-                                           '</a>';
+            // 文章排行榜 - 现代化列表渲染
+            let currentPage = 1;
+            let totalPages = 1;
+            let articlesData = [];
+
+            async function renderArticleTable() {
+                const articleListContainer = document.getElementById('articleTable');
+
+                // 显示加载状态
+                articleListContainer.innerHTML = '<div class="article-loading">📚 加载中...</div>';
+
+                try {
+                    const response = await fetch(`/api/collections/articles/records?expand=userId&sort=-createdAt&page=${currentPage}&perPage=10`);
+                    const data = await response.json();
+
+                    articlesData = data.items || [];
+                    totalPages = Math.ceil((data.totalItems || 0) / 10);
+
+                    if (articlesData.length === 0) {
+                        articleListContainer.innerHTML = '<div class="article-loading">暂无文章</div>';
+                        return;
+                    }
+
+                    // 渲染文章列表
+                    let html = '<div class="article-list">';
+
+                    articlesData.forEach((article, index) => {
+                        const rank = (currentPage - 1) * 10 + index + 1;
+                        const user = article.expand && article.expand.userId ? article.expand.userId : {};
+                        const displayName = user.nickname || user.name || '未知作者';
+                        const memberUrl = user.name ? `https://fishpi.cn/member/${encodeURIComponent(user.name)}` : '#';
+                        const articleUrl = `https://fishpi.cn/article/${article.oId}`;
+                        const isMyArticle = currentUserInfo && article.id === currentUserInfo.articleId;
+
+                        let rankClass = '';
+                        if (rank === 1) rankClass = 'rank-1';
+                        else if (rank === 2) rankClass = 'rank-2';
+                        else if (rank === 3) rankClass = 'rank-3';
+
+                        html += `
+                            <div class="article-card ${isMyArticle ? 'my-article' : ''}">
+                                ${isMyArticle ? '<div class="article-badge">🎉 我的文章</div>' : ''}
+                                <div class="article-rank ${rankClass}">${rank}</div>
+                                <div class="article-content">
+                                    <div class="article-header">
+                                        <a href="${memberUrl}" target="_blank" class="article-author">
+                                            <img src="${user.avatar || 'https://file.fishpi.cn/default-avatar.png'}"
+                                                 alt="avatar"
+                                                 class="article-author-avatar"
+                                                 onerror="this.src='https://file.fishpi.cn/default-avatar.png'">
+                                            <div class="article-author-info">
+                                                <div class="article-author-name">${displayName}</div>
+                                                <div class="article-author-nickname">@${user.name || '未知'}</div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <a href="${articleUrl}" target="_blank" class="article-title-link">
+                                        <h3 class="article-title">${article.title || '无标题'}</h3>
+                                    </a>
+                                    ${article.previewContent ? `<div class="article-preview">${article.previewContent}</div>` : ''}
+                                    <div class="article-stats">
+                                        <div class="article-stat-item">
+                                            <span class="article-stat-icon">👁️</span>
+                                            <span class="article-stat-label">浏览</span>
+                                            <span class="article-stat-value">${article.viewCount || 0}</span>
+                                        </div>
+                                        <div class="article-stat-item">
+                                            <span class="article-stat-icon">👍</span>
+                                            <span class="article-stat-label">点赞</span>
+                                            <span class="article-stat-value">${article.goodCnt || 0}</span>
+                                        </div>
+                                        <div class="article-stat-item">
+                                            <span class="article-stat-icon">💬</span>
+                                            <span class="article-stat-label">评论</span>
+                                            <span class="article-stat-value">${article.commentCount || 0}</span>
+                                        </div>
+                                        <div class="article-stat-item">
+                                            <span class="article-stat-icon">⭐</span>
+                                            <span class="article-stat-label">收藏</span>
+                                            <span class="article-stat-value">${article.collectCnt || 0}</span>
+                                        </div>
+                                        <div class="article-stat-item">
+                                            <span class="article-stat-icon">🙏</span>
+                                            <span class="article-stat-label">感谢</span>
+                                            <span class="article-stat-value">${article.thankCnt || 0}</span>
+                                        </div>
+                                    </div>
+                                    <div class="article-time">
+                                        📅 发布于 ${formatDate(article.createdAt || article.created)}
+                                        ${article.updatedAt && article.updatedAt !== article.createdAt ? ` · 更新于 ${formatDate(article.updatedAt || article.updated)}` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+
+                    // 添加分页控件
+                    if (totalPages > 1) {
+                        html += `
+                            <div class="article-pagination">
+                                <button class="pagination-btn" id="prevPage" ${currentPage === 1 ? 'disabled' : ''}>
+                                    ← 上一页
+                                </button>
+                                <span class="pagination-info">第 ${currentPage} / ${totalPages} 页</span>
+                                <button class="pagination-btn" id="nextPage" ${currentPage === totalPages ? 'disabled' : ''}>
+                                    下一页 →
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    articleListContainer.innerHTML = html;
+
+                    // 绑定分页按钮事件
+                    if (totalPages > 1) {
+                        const prevBtn = document.getElementById('prevPage');
+                        const nextBtn = document.getElementById('nextPage');
+
+                        if (prevBtn) {
+                            prevBtn.addEventListener('click', () => {
+                                if (currentPage > 1) {
+                                    currentPage--;
+                                    renderArticleTable();
+                                    // 滚动到顶部
+                                    document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
                                 }
-                                return '<div style="display: flex; align-items: center; gap: 8px;">' + avatarHtml + '<span>' + displayName + '</span></div>';
-                            }
-                            return '-';
-                        }},
-                        {field: 'viewCount', title: '浏览量', width: 100, sort: true},
-                        {field: 'goodCnt', title: '点赞量', width: 100, sort: true},
-                        {field: 'commentCount', title: '评论数', width: 100, sort: true},
-                        {field: 'collectCnt', title: '收藏量', width: 100, sort: true},
-                        {field: 'thankCnt', title: '感谢数', width: 100, sort: true},
-                        {field: 'created', title: '创建时间', width: 180, sort: true, templet: function(d){
-                            return formatDate(d.createdAt || d.created);
-                         }},
-                         {field: 'updated', title: '更新时间', width: 180, sort: true, templet: function(d){
-                            return formatDate(d.updatedAt || d.updated);
-                         }}
-                    ]],
-                    parseData: function(res){
-                        return {
-                            "code": 0,
-                            "msg": "",
-                            "count": res.totalItems,
-                            "data": res.items
-                        };
-                    },
-                    done: function(res, curr, count){
-                        // 高亮当前用户的文章
-                        if(currentUserInfo && currentUserInfo.articleId) {
-                            res.data.forEach((item, index) => {
-                                if(item.id === currentUserInfo.articleId) {
-                                    const row = document.querySelector(`#articleTable + .layui-table-view .layui-table-body tr[data-index="${index}"]`);
-                                    if(row) {
-                                        row.classList.add('my-article-row');
-                                    }
+                            });
+                        }
+
+                        if (nextBtn) {
+                            nextBtn.addEventListener('click', () => {
+                                if (currentPage < totalPages) {
+                                    currentPage++;
+                                    renderArticleTable();
+                                    // 滚动到顶部
+                                    document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
                                 }
                             });
                         }
                     }
-                });
+
+                } catch (error) {
+                    console.error('加载文章列表失败:', error);
+                    articleListContainer.innerHTML = '<div class="article-loading" style="color: #f56c6c;">❌ 加载失败，请刷新重试</div>';
+                }
             }
 
             // 博饼游戏逻辑
