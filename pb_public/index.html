@@ -153,7 +153,37 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
         }
-
+        
+        /* 返回顶部按钮样式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1000;
+            font-size: 24px;
+        }
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -249,23 +279,55 @@
 
         /* 博饼区域样式 */
         .mooncake-section {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
-        .prize-panel {
-            width: 100%;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            overflow-x: auto;
-            overflow-y: auto;
-            max-height: 400px;
-            box-sizing: border-box;
+        
+        /* 博饼游戏主区域 - 改为两行布局 */
+        .mooncake-game-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+            margin-bottom: 20px;
         }
+        
+        /* 第一行：奖励列表占据整行 */
+        .prize-panel {
+            grid-column: 1;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* 第二行：博饼游戏和记录 */
+        .game-and-history-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media screen and (max-width: 1200px) {
+            .game-and-history-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .prize-panel h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
         .prize-table {
             width: 100%;
-            min-width: 730px;
             border-collapse: collapse;
             background: white;
             border-radius: 8px;
@@ -603,103 +665,138 @@
         .rank-other { background: #999; }
 
         .dice-area {
-            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            padding: 30px 15px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
             position: relative;
-            min-height: 400px;
-            box-sizing: border-box;
             overflow: hidden;
+        }
+        
+        .dice-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .dice-area h2 {
+            position: relative;
+            z-index: 1;
+            color: white;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 26px;
         }
 
         /* 博饼区域内的用户信息样式 */
         .dice-user-info {
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             width: 90%;
-            max-width: 600px;
+            max-width: 650px;
         }
         .dice-user-avatar {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #1E9FFF;
+            border: 3px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .dice-user-details {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 4px;
         }
         .dice-user-nickname {
-            font-size: 18px;
+            font-size: 19px;
             font-weight: bold;
             color: #333;
         }
         .dice-user-name {
-            font-size: 12px;
+            font-size: 13px;
             color: #999;
         }
         .dice-times-info {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             align-items: center;
         }
         .dice-times-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
+            gap: 5px;
         }
         .dice-times-label {
-            font-size: 12px;
+            font-size: 13px;
             color: #666;
+            font-weight: 500;
         }
         .dice-times-number {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #1E9FFF;
+            color: #667eea;
         }
         .dice-times-number.remaining {
             color: #FFB800;
         }
 
         .dice-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin: 30px 0;
             max-width: 100%;
-            flex-wrap: wrap;
         }
+        
         .dice {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 45px;
             font-weight: bold;
             color: #333;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-            box-sizing: border-box;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255,255,255,0.5);
         }
+        
+        .dice:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
         .dice.rolling {
             animation: roll 0.5s infinite;
         }
@@ -709,6 +806,30 @@
             50% { transform: rotate(180deg); }
             75% { transform: rotate(270deg); }
         }
+        
+        #rollBtn {
+            position: relative;
+            z-index: 1;
+            padding: 15px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 6px 20px rgba(255,0,0,0.3);
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        #rollBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,0,0,0.4);
+        }
+        
+        #rollBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .result-display {
             text-align: center;
             color: white;
@@ -755,33 +876,51 @@
         }
 
         .history-panel {
-            width: 100%;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            height: fit-content;
+            max-height: 600px;
             overflow-y: auto;
-            overflow-x: hidden;
-            max-height: 400px;
-            box-sizing: border-box;
         }
+        
+        .history-panel h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
         .history-item {
             background: white;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
             font-size: 13px;
-            border-left: 3px solid #FFB800;
-            word-wrap: break-word;
-            box-sizing: border-box;
+            border-left: 4px solid #FFB800;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
         }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+        }
+        
         .history-time {
             color: #999;
             font-size: 11px;
         }
         .history-result {
-            color: #1E9FFF;
+            color: #667eea;
             font-weight: bold;
             margin: 5px 0;
+            font-size: 14px;
         }
         .history-dices {
             color: #666;
@@ -799,17 +938,17 @@
             .section {
                 padding: 15px;
             }
-            .dice {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
-            }
             .dice-container {
+                grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
             }
+            .dice {
+                width: 70px;
+                height: 70px;
+                font-size: 35px;
+            }
             .dice-area {
-                padding: 20px 10px;
-                min-height: 350px;
+                padding: 25px 15px;
             }
             .prize-table th,
             .prize-table td {
@@ -819,13 +958,21 @@
             .user-card {
                 flex-direction: column;
             }
+            #rollBtn {
+                padding: 12px 35px;
+                font-size: 16px;
+            }
         }
 
         @media screen and (max-width: 480px) {
+            .dice-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
             .dice {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
             }
             .result-prize {
                 font-size: 24px !important;
@@ -922,60 +1069,63 @@
                 <i class="layui-icon layui-icon-gift"></i> 博饼抽奖
             </div>
             <div class="mooncake-section">
-                <!-- 左侧：奖励列表 -->
-                <div class="prize-panel">
-                    <h3 style="margin-bottom: 15px; color: #333;">🎁 奖励列表</h3>
-                    <table class="prize-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 100px;">奖励等级</th>
-                                <th style="width: 120px;">奖项名称</th>
-                                <th style="width: 200px;">奖项描述</th>
-                                <th style="width: 80px;">积分</th>
-                                <th style="width: 80px;">数量</th>
-                                <th style="width: 150px;">备注</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
-                                    暂无奖励可显示
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- 中间：博饼区域 -->
-                <div class="dice-area">
-                    <h2 style="color: white; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                        🎲 博饼游戏
-                    </h2>
-
-                    <!-- 用户信息显示 -->
-                    <div class="dice-user-info" id="userStatusDice">
-                        <!-- 用户信息内容将通过JavaScript动态插入 -->
+                <!-- 三列布局：奖励列表 | 博饼游戏 | 博饼记录 -->
+                <div class="mooncake-game-wrapper">
+                    <!-- 第一行：奖励列表（全宽）-->
+                    <div class="prize-panel">
+                        <h3>🎁 奖励列表</h3>
+                        <table class="prize-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">奖励等级</th>
+                                    <th style="width: 120px;">奖项名称</th>
+                                    <th style="width: 200px;">奖项描述</th>
+                                    <th style="width: 80px;">积分</th>
+                                    <th style="width: 80px;">数量</th>
+                                    <th style="width: 150px;">备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
+                                        暂无奖励可显示
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
-                    <div class="dice-container">
-                        <div class="dice" id="dice1">?</div>
-                        <div class="dice" id="dice2">?</div>
-                        <div class="dice" id="dice3">?</div>
-                        <div class="dice" id="dice4">?</div>
-                        <div class="dice" id="dice5">?</div>
-                        <div class="dice" id="dice6">?</div>
-                    </div>
-                    <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
-                        <i class="layui-icon layui-icon-play"></i> 开始博饼
-                    </button>
-                </div>
+                    <!-- 第二行：博饼游戏区域和博饼记录 -->
+                    <div class="game-and-history-row">
+                        <div class="dice-area">
+                            <h2>🎲 博饼游戏</h2>
 
-                <!-- 右侧：博饼记录 -->
-                <div class="history-panel">
-                    <h3 style="margin-bottom: 15px; color: #333;">📜 博饼记录</h3>
-                    <div id="historyList">
-                        <div style="text-align: center; color: #999; padding: 20px;">
-                            暂无记录，快来试试手气吧！
+                            <!-- 用户信息显示 -->
+                            <div id="userStatusDice">
+                                <!-- 用户信息内容将通过JavaScript动态插入 -->
+                            </div>
+
+                            <div class="dice-container">
+                                <div class="dice" id="dice1">?</div>
+                                <div class="dice" id="dice2">?</div>
+                                <div class="dice" id="dice3">?</div>
+                                <div class="dice" id="dice4">?</div>
+                                <div class="dice" id="dice5">?</div>
+                                <div class="dice" id="dice6">?</div>
+                            </div>
+                            <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
+                                <i class="layui-icon layui-icon-play"></i> 开始博饼
+                            </button>
+                        </div>
+
+                        <!-- 右侧：博饼记录 -->
+                        <div class="history-panel">
+                            <h3>📜 博饼记录</h3>
+                            <div id="historyList">
+                                <div style="text-align: center; color: #999; padding: 20px;">
+                                    暂无记录，快来试试手气吧！
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1037,6 +1187,11 @@
             <div id="myVoteRecords" style="color: #999; padding: 10px;">
                 <!-- 用户投票记录将通过JavaScript动态插入 -->
             </div>
+        </div>
+
+        <!-- 返回顶部按钮 -->
+        <div class="back-to-top" id="backToTop">
+            ↑
         </div>
     </div>
 
@@ -2122,6 +2277,24 @@
 
             // 页面加载时初始化
             initPage();
+
+            // 返回顶部按钮
+            const backToTopBtn = document.getElementById('backToTop');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            });
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         });
     </script>
 </body>
