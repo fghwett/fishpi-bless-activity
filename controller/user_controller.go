@@ -81,6 +81,7 @@ func (controller *UserController) GetMe(event *core.RequestEvent) error {
 		"nickname":                        user.Nickname(),
 		"avatar":                          user.Avatar(),
 		"article_id":                      article.Id,
+		"article_o_id":                    article.OId(),
 		"article_title":                   article.Title(),
 		"article_thank_cnt":               article.ThankCnt(),
 		"default_mooncake_gambling_times": model.DefaultMooncakeGamblingTimes,

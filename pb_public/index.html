@@ -688,6 +688,7 @@
                         currentUserInfo = {
                             id: data.id,
                             articleId: data.article_id,
+                            articleOId: data.article_o_id,
                             articleThankCnt: data.article_thank_cnt || 0,
                             articleTitle: data.article_title || '',
                             avatar: data.avatar,
@@ -751,7 +752,7 @@
                                 <div class="user-details">
                                     <div class="user-nickname">${currentUserInfo.nickname || currentUserInfo.name}</div>
                                     <div class="user-name">@${currentUserInfo.name}</div>
-                                    ${currentUserInfo.articleTitle ? `<div style="font-size: 12px; color: #1E9FFF; margin-top: 3px;"><a href=\"https://fishpi.cn/article/${currentUserInfo.oId}\" target=\"_blank\" style=\"color:#1E9FFF; text-decoration:none;\">📝 ${currentUserInfo.articleTitle}</a></div>` : ''}
+                                    ${currentUserInfo.articleTitle ? `<div style="font-size: 12px; color: #1E9FFF; margin-top: 3px;"><a href=\"https://fishpi.cn/article/${currentUserInfo.articleOId}\" target=\"_blank\" style=\"color:#1E9FFF; text-decoration:none;\">📝 ${currentUserInfo.articleTitle}</a></div>` : ''}
                                 </div>
                             </a>
                         </div>
