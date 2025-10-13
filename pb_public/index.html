@@ -42,11 +42,14 @@
             background: #f8f9fa;
             border-radius: 8px;
             padding: 15px;
+            overflow-x: auto;
             overflow-y: auto;
             max-height: 400px;
+            box-sizing: border-box;
         }
         .prize-table {
             width: 100%;
+            min-width: 730px;
             border-collapse: collapse;
             background: white;
             border-radius: 8px;
@@ -62,11 +65,14 @@
             text-align: left;
             font-weight: bold;
             font-size: 14px;
+            white-space: nowrap;
         }
         .prize-table td {
             padding: 10px;
             border-bottom: 1px solid #eee;
             font-size: 13px;
+            word-wrap: break-word;
+            word-break: break-word;
         }
         .prize-table tbody tr:hover {
             background: #f8f9fa;
@@ -83,15 +89,18 @@
             justify-content: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 8px;
-            padding: 30px;
+            padding: 30px 15px;
             position: relative;
             min-height: 400px;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .dice-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin: 30px 0;
+            max-width: 100%;
         }
         .dice {
             width: 80px;
@@ -106,6 +115,7 @@
             color: #333;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: all 0.3s;
+            box-sizing: border-box;
         }
         .dice.rolling {
             animation: roll 0.5s infinite;
@@ -120,6 +130,9 @@
             text-align: center;
             color: white;
             margin-top: 20px;
+            max-width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
         }
         .result-prize {
             font-size: 32px;
@@ -138,15 +151,24 @@
             gap: 5px;
             justify-content: center;
             margin-top: 10px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
         .dice-svg {
             width: 40px;
             height: 40px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease-out;
+        }
+        .dice-svg.show {
+            opacity: 1;
+            transform: scale(1);
         }
         .history-dices .dice-svg {
             width: 24px;
             height: 24px;
+            opacity: 1;
+            transform: scale(1);
         }
 
         .history-panel {
@@ -155,7 +177,9 @@
             border-radius: 8px;
             padding: 15px;
             overflow-y: auto;
+            overflow-x: hidden;
             max-height: 400px;
+            box-sizing: border-box;
         }
         .history-item {
             background: white;
@@ -164,6 +188,8 @@
             margin-bottom: 8px;
             font-size: 13px;
             border-left: 3px solid #FFB800;
+            word-wrap: break-word;
+            box-sizing: border-box;
         }
         .history-time {
             color: #999;
@@ -180,6 +206,47 @@
             display: flex;
             align-items: center;
             gap: 3px;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .section {
+                padding: 15px;
+            }
+            .dice {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            .dice-container {
+                gap: 10px;
+            }
+            .dice-area {
+                padding: 20px 10px;
+                min-height: 350px;
+            }
+            .prize-table th,
+            .prize-table td {
+                padding: 8px 5px;
+                font-size: 12px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .dice {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .result-prize {
+                font-size: 24px !important;
+            }
+            .result-level {
+                font-size: 14px !important;
+            }
         }
     </style>
 </head>
@@ -455,9 +522,29 @@
                         dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
                     });
 
-                    // 显示结果
+                    // 显示结果区域
                     document.getElementById('resultDisplay').style.display = 'block';
                     document.getElementById('resultPrize').textContent = result.prizeName;
+
+                    // 清空并准备结果骰子容器
+                    const resultDicesContainer = document.getElementById('resultDices');
+                    resultDicesContainer.innerHTML = '';
+
+                    // 依次添加骰子，带有动画效果
+                    result.dices.forEach((diceValue, index) => {
+                        setTimeout(() => {
+                            const img = document.createElement('img');
+                            img.src = `data:image/svg+xml;base64,${getDiceSVGBase64(diceValue)}`;
+                            img.alt = `dice-${diceValue}`;
+                            img.className = 'dice-svg';
+                            resultDicesContainer.appendChild(img);
+
+                            // 添加show类触发动画
+                            setTimeout(() => {
+                                img.classList.add('show');
+                            }, 10);
+                        }, index * 150); // 每个骰子间隔150ms出现
+                    });
 
                     // 添加到历史记录
                     addHistory(result);
@@ -605,10 +692,10 @@
             // 获取骰子SVG的Base64编码
             function getDiceSVGBase64(d) {
                 const svgs = {
-                    1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="#333"/></svg>`,
+                    1: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="red"/></svg>`,
                     2: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
                     3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="50" cy="50" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
-                    4: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="30" r="8" fill="#333"/><circle cx="30" cy="70" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
+                    4: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="red"/><circle cx="70" cy="30" r="8" fill="red"/><circle cx="30" cy="70" r="8" fill="red"/><circle cx="70" cy="70" r="8" fill="red"/></svg>`,
                     5: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="30" r="8" fill="#333"/><circle cx="70" cy="30" r="8" fill="#333"/><circle cx="50" cy="50" r="8" fill="#333"/><circle cx="30" cy="70" r="8" fill="#333"/><circle cx="70" cy="70" r="8" fill="#333"/></svg>`,
                     6: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="15" fill="#fff" stroke="#333" stroke-width="2"/><circle cx="30" cy="25" r="8" fill="#333"/><circle cx="70" cy="25" r="8" fill="#333"/><circle cx="30" cy="50" r="8" fill="#333"/><circle cx="70" cy="50" r="8" fill="#333"/><circle cx="30" cy="75" r="8" fill="#333"/><circle cx="70" cy="75" r="8" fill="#333"/></svg>`
                 };
