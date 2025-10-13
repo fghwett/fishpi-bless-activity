@@ -202,6 +202,120 @@
             flex-wrap: wrap;
             gap: 15px;
         }
+
+        /* Redesigned user card */
+        .new-user-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .user-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .user-avatar-lg {
+            width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 3px solid #1E9FFF;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .user-nickname {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .user-article-link {
+            font-size: 12px;
+            color: #1E9FFF;
+            margin-top: 6px;
+            text-decoration: none;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stat-item {
+            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            min-width: 90px;
+        }
+
+        .stat-num {
+            font-size: 18px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .user-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .user-actions .layui-btn {
+            min-width: 110px;
+        }
+
+        .limit-warning {
+            font-size: 12px;
+            color: #FFB800;
+            margin-top: 6px;
+        }
+
+        @media screen and (max-width: 900px) {
+            .new-user-card { grid-template-columns: 1fr; }
+            .user-actions { align-items: flex-start; }
+            .user-stats { justify-content: flex-start; }
+        }
+
+        /* 用户信息卡片样式 */
+        .user-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
         .user-info {
             display: flex;
             align-items: center;
@@ -1291,29 +1405,35 @@
 
             // 退出登录：清除相关cookie并刷新页面
             function logoutAndReload() {
-                // 尝试清除已知的认证cookie
-                deleteCookie('token');
-                deleteCookie('pb_auth');
-                deleteCookie('pb_auth_token');
-                // 如果需要，可以清除更多cookie名，例如 session, auth 等
-                deleteCookie('session');
+                // 首先调用后端登出接口，确保 HttpOnly cookie 在服务端被清除
+                fetch('/user/logout', {
+                    method: 'GET',
+                    credentials: 'include'
+                }).catch(err => {
+                    // 忽略网络错误，继续在客户端做清理
+                    console.warn('调用 /user/logout 失败:', err);
+                }).finally(() => {
+                    // 尝试清除已知的认证cookie（客户端可见的）
+                    deleteCookie('token');
+                    deleteCookie('pb_auth');
+                    deleteCookie('pb_auth_token');
+                    deleteCookie('session');
 
-                // 若存在 localStorage 相关的 auth key，也尝试清除
-                try {
-                    if (window.localStorage) {
-                        // 常见key清理（按需扩展）
-                        localStorage.removeItem('pb_auth');
-                        localStorage.removeItem('token');
+                    // 若存在 localStorage 相关的 auth key，也尝试清除
+                    try {
+                        if (window.localStorage) {
+                            localStorage.removeItem('pb_auth');
+                            localStorage.removeItem('token');
+                        }
+                    } catch (e) {
+                        console.warn('清理 localStorage 失败', e);
                     }
-                } catch (e) {
-                    console.warn('清理 localStorage 失败', e);
-                }
 
-                // 小延迟，确保浏览器完成 cookie 写入，再刷新
-                setTimeout(() => {
-                    // 强制刷新并忽略缓存
-                    window.location.reload(true);
-                }, 150);
+                    // 小延迟，确保浏览器完成 cookie 写入或服务端 Set-Cookie 生效，随后刷新页面
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 150);
+                });
             }
 
             // 检查用户是否已登录
@@ -1403,35 +1523,39 @@
                 const isLimited = (currentUserInfo.defaultTimes + currentUserInfo.articleThankCnt) > currentUserInfo.maxTimes;
 
                 userStatusSection.innerHTML = `
-                    <div class="user-card">
-                        <div class="user-info">
-                            <a href="${currentUserInfo.name ? ('https://fishpi.cn/member/' + encodeURIComponent(currentUserInfo.name)) : '/user/me'}" target="_blank" style="display:inline-flex; align-items:center; gap:12px; text-decoration:none; color:inherit;">
-                                <img src="${currentUserInfo.avatar}" alt="avatar" class="user-avatar" onerror="this.src='https://file.fishpi.cn/default-avatar.png'">
-                                <div class="user-details">
-                                    <div class="user-nickname">${currentUserInfo.nickname || currentUserInfo.name}</div>
-                                    <div class="user-name">@${currentUserInfo.name}</div>
-                                    ${currentUserInfo.articleTitle ? `<div style="font-size: 12px; color: #1E9FFF; margin-top: 3px;"><a href=\"https://fishpi.cn/article/${currentUserInfo.articleOId}\" target=\"_blank\" style=\"color:#1E9FFF; text-decoration:none;\">📝 ${currentUserInfo.articleTitle}</a></div>` : ''}
-                                </div>
+                    <div class="user-card new-user-card">
+                        <div class="user-left">
+                            <a href="${currentUserInfo.name ? ('https://fishpi.cn/member/' + encodeURIComponent(currentUserInfo.name)) : '/user/me'}" target="_blank" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;">
+                                <img src="${currentUserInfo.avatar}" alt="avatar" class="user-avatar-lg" onerror="this.src='https://file.fishpi.cn/default-avatar.png'">
                             </a>
+                            <div class="user-meta">
+                                <div class="user-nickname">${currentUserInfo.nickname || currentUserInfo.name}</div>
+                                <div class="user-name">@${currentUserInfo.name}</div>
+                                ${currentUserInfo.articleTitle ? `<a class="user-article-link" href=\"https://fishpi.cn/article/${currentUserInfo.articleOId}\" target=\"_blank\">📝 ${currentUserInfo.articleTitle}</a>` : ''}
+                            </div>
                         </div>
-                        <div class="times-info">
-                            <div class="times-item">
-                                <span>总次数：</span>
-                                <span class="times-number">${totalTimes}</span>
-                                <span style="font-size: 12px; opacity: 0.8;">(默认${currentUserInfo.defaultTimes} + 文章感谢${currentUserInfo.articleThankCnt}${isLimited ? `, 已达上限${currentUserInfo.maxTimes}` : ''})</span>
+
+                        <div class="user-stats">
+                            <div class="stat-item">
+                                <div class="stat-num">${totalTimes}</div>
+                                <div class="stat-label">总次数</div>
                             </div>
-                            <div class="times-item">
-                                <span>剩余次数：</span>
-                                <span class="times-number" style="color: #FFD700;">${currentUserInfo.restTimes}</span>
+                            <div class="stat-item">
+                                <div class="stat-num" style="color:#FFB800;">${currentUserInfo.restTimes}</div>
+                                <div class="stat-label">剩余次数</div>
                             </div>
-                            <div class="times-item" style="font-size: 12px; opacity: 0.9;">
-                                <span>已使用：${totalTimes - currentUserInfo.restTimes} 次</span>
+                            <div class="stat-item">
+                                <div class="stat-num">${totalTimes - currentUserInfo.restTimes}</div>
+                                <div class="stat-label">已用</div>
                             </div>
-                            ${isLimited ? `<div class="times-item" style="font-size: 12px; color: #FFD700; opacity: 1;"><span>⚠️ 抽奖次数已达最大限制${currentUserInfo.maxTimes}次</span></div>` : ''}
-                            <!-- 退出登录按钮 -->
-                            <div style="margin-top:8px; display:flex; justify-content:center;">
-                                <button id="logoutBtn" class="layui-btn layui-btn-primary layui-btn-sm" style="background:#fff; color:#FF6B6B; border:1px solid #ffb4b4;">退出登录</button>
+                        </div>
+
+                        <div class="user-actions">
+                            <div style="display:flex; gap:8px;">
+                                <button id="logoutBtn" class="layui-btn layui-btn-danger">退出登录</button>
+<!--                                <a href="/user/me" class="layui-btn layui-btn-normal">个人中心</a>-->
                             </div>
+                            ${isLimited ? `<div class="limit-warning">⚠️ 抽奖次数已达最大限制 ${currentUserInfo.maxTimes} 次</div>` : ''}
                         </div>
                     </div>
                 `;
