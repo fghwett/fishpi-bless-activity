@@ -35,7 +35,7 @@ func NewVoteController(event *core.ServeEvent) *VoteController {
 func (controller *VoteController) registerRoutes() {
 	group := controller.event.Router.Group("/vote")
 	group.POST("", controller.CreateVote).BindFunc(controller.CheckLogin)
-	group.DELETE("/:id", controller.DeleteVote).BindFunc(controller.CheckLogin)
+	group.DELETE("/{id}", controller.DeleteVote).BindFunc(controller.CheckLogin)
 	group.GET("/my", controller.GetMyVotes).BindFunc(controller.CheckLogin)
 	group.GET("/rank", controller.GetVoteRank)
 	group.GET("/statistics", controller.GetStatistics)
