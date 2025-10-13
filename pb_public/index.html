@@ -504,15 +504,17 @@
                 const result = rollDices();
                 const dices = document.querySelectorAll('.dice');
 
-                // 依次让每个骰子摇动并显示结果
-                let completedCount = 0;
-                dices.forEach((dice, index) => {
-                    setTimeout(() => {
-                        // 开始摇动这个骰子
-                        dice.classList.add('rolling');
-                        dice.textContent = '?';
+                // 第一步：所有骰子回到初始状态并一起开始摇动
+                dices.forEach(dice => {
+                    dice.textContent = '?';
+                    dice.classList.add('rolling');
+                });
 
-                        // 500ms后显示这个骰子的结果
+                // 第二步：1秒后，依次显示每个骰子的结果
+                setTimeout(() => {
+                    let completedCount = 0;
+
+                    dices.forEach((dice, index) => {
                         setTimeout(() => {
                             dice.classList.remove('rolling');
                             dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
@@ -531,9 +533,9 @@
                                     layer.msg('恭喜获得：' + result.prizeName, {icon: 1, time: 2000});
                                 }, 200);
                             }
-                        }, 500);
-                    }, index * 600); // 每个骰子间隔600ms开始摇动
-                });
+                        }, index * 200); // 每个骰子间隔200ms显示结果
+                    });
+                }, 1000); // 所有骰子一起摇动1秒后开始依次显示结果
             });
 
             // 模拟掷骰子
