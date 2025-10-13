@@ -618,10 +618,10 @@
                     </div>
                 </div>
 
-                <!-- 找财符排行榜 -->
+                <!-- 招财符排行榜 -->
                 <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
                     <h3 style="margin-bottom: 15px; color: #333; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 24px;">💰</span> 找财符排行榜
+                        <span style="font-size: 24px;">💰</span> 招财符排行榜
                     </h3>
                     <div id="wealthRankList" style="display: flex; flex-direction: column; gap: 10px;">
                         <div style="text-align: center; color: #999; padding: 20px;">暂无数据</div>
@@ -1253,7 +1253,7 @@
                         const voteTypes = [
                             { type: 'career', name: '事业符', icon: '💼', voted: data.career_voted },
                             { type: 'romance', name: '姻缘符', icon: '💕', voted: data.romance_voted },
-                            { type: 'wealth', name: '找财符', icon: '💰', voted: data.wealth_voted }
+                            { type: 'wealth', name: '招财符', icon: '💰', voted: data.wealth_voted }
                         ];
 
                         voteStatusCards.innerHTML = voteTypes.map(vt => `
@@ -1480,7 +1480,7 @@
                             return;
                         }
 
-                        // 按事业符、姻缘符、找财符分别排序，取前3名
+                        // 按事业符、姻缘符、招财符分别排序，取前3名
                         const careerRank = [...items].sort((a, b) => b.career_count - a.career_count).filter(item => item.career_count > 0).slice(0, 3);
                         const romanceRank = [...items].sort((a, b) => b.romance_count - a.romance_count).filter(item => item.romance_count > 0).slice(0, 3);
                         const wealthRank = [...items].sort((a, b) => b.wealth_count - a.wealth_count).filter(item => item.wealth_count > 0).slice(0, 3);
@@ -1572,7 +1572,7 @@
                         const voteTypeMap = {
                             'career': { name: '事业符', icon: '💼' },
                             'romance': { name: '姻缘符', icon: '💕' },
-                            'wealth': { name: '找财符', icon: '💰' }
+                            'wealth': { name: '招财符', icon: '💰' }
                         };
 
                         myVoteRecords.innerHTML = `
