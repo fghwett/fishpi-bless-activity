@@ -670,6 +670,11 @@
                 // 更新用户状态显示
                 updateUserStatusDisplay();
 
+                // 如果已登录，加载历史记录
+                if (isLoggedIn) {
+                    await loadHistoryFromServer();
+                }
+
                 // 检查URL参数
                 checkURLParams();
 
@@ -846,6 +851,40 @@
             let isRolling = false;
             let history = [];
 
+            // 页面加载时获取历史记录
+            async function loadHistoryFromServer() {
+                if (!currentUserInfo) return;
+
+                try {
+                    const response = await fetch('/mooncake/history', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('获取到历史记录:', data);
+
+                        // 转换服务器数据为前端格式
+                        history = data.items.map(item => ({
+                            time: formatDate(item.created),
+                            result: {
+                                dices: item.dices,
+                                prizeName: item.prize_name,
+                                prizeLevel: item.prize_level
+                            }
+                        }));
+
+                        updateHistoryDisplay();
+                    }
+                } catch (error) {
+                    console.error('加载历史记录失败:', error);
+                }
+            }
+
             document.getElementById('rollBtn').addEventListener('click', async function(){
                 if(isRolling) return;
 
@@ -874,20 +913,22 @@
 
                 try {
                     // 调用服务器博饼接口
-                    const token = getCookie('token');
+                    console.log('正在调用博饼接口...');
                     const response = await fetch('/mooncake/gambling', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        }
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
                     });
 
                     if(!response.ok) {
-                        throw new Error('博饼请求失败');
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || '博饼请求失败');
                     }
 
                     const result = await response.json();
+                    console.log('博饼结果:', result);
 
                     // 显示骰子动画
                     const dices = document.querySelectorAll('.dice');
@@ -909,10 +950,10 @@
 
                                 if(completedCount === 6) {
                                     // 更新剩余次数
-                                    currentUserInfo.restTimes = result.rest_times || (currentUserInfo.restTimes - 1);
+                                    currentUserInfo.restTimes = result.rest_times;
                                     updateUserStatusDisplay();
 
-                                    // 添加到历史记录
+                                    // 添加到历史记录（前端显示）
                                     addHistory({
                                         dices: result.dices,
                                         prizeName: result.prize_name,
@@ -922,9 +963,13 @@
                                     isRolling = false;
                                     rollButton.disabled = false;
 
-                                    // 显示提示
+                                    // 显示提示（包含奖项名称）
                                     setTimeout(() => {
-                                        layer.msg('恭喜获得：' + result.prize_name, {icon: 1, time: 2000});
+                                        let message = '恭喜获得：' + result.prize_name;
+                                        if (result.award_name) {
+                                            message += ' - ' + result.award_name;
+                                        }
+                                        layer.msg(message, {icon: 1, time: 3000});
                                     }, 200);
                                 }
                             }, index * 200);
@@ -933,7 +978,7 @@
 
                 } catch(error) {
                     console.error('博饼失败:', error);
-                    layer.msg('博饼失败，请稍后重试', {icon: 2});
+                    layer.msg(error.message || '博饼失败，请稍后重试', {icon: 2});
                     isRolling = false;
                     rollButton.disabled = false;
                 }

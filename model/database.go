@@ -446,7 +446,7 @@ func (history *Histories) SetIsBest(value bool) {
 
 func (history *Histories) Details() [6]int {
 	var details = types.JSONArray[int]{}
-	_ = details.Scan(history.GetRaw(HistoriesFieldDetails))
+	_ = details.Scan(history.GetString(HistoriesFieldDetails))
 
 	var arr [6]int
 	for i := 0; i < 6 && i < len(details); i++ {
