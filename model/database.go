@@ -467,3 +467,68 @@ func (history *Histories) Created() types.DateTime {
 func (history *Histories) Updated() types.DateTime {
 	return history.GetDateTime(HistoriesFieldUpdated)
 }
+
+const (
+	DbNameVotes          = "votes"
+	VotesFieldFromUserId = "fromUserId"
+	VotesFieldToUserId   = "toUserId"
+	VotesFieldArticleId  = "articleId"
+	VotesFieldVoteType   = "voteType"
+	VotesFieldCreated    = "created"
+	VotesFieldUpdated    = "updated"
+)
+
+type Vote struct {
+	core.BaseRecordProxy
+}
+
+func NewVote(record *core.Record) *Vote {
+	vote := new(Vote)
+	vote.SetProxyRecord(record)
+	return vote
+}
+
+func NewVoteFromCollection(collection *core.Collection) *Vote {
+	record := core.NewRecord(collection)
+	return NewVote(record)
+}
+
+func (vote *Vote) FromUserId() string {
+	return vote.GetString(VotesFieldFromUserId)
+}
+
+func (vote *Vote) SetFromUserId(value string) {
+	vote.Set(VotesFieldFromUserId, value)
+}
+
+func (vote *Vote) ToUserId() string {
+	return vote.GetString(VotesFieldToUserId)
+}
+
+func (vote *Vote) SetToUserId(value string) {
+	vote.Set(VotesFieldToUserId, value)
+}
+
+func (vote *Vote) ArticleId() string {
+	return vote.GetString(VotesFieldArticleId)
+}
+
+func (vote *Vote) SetArticleId(value string) {
+	vote.Set(VotesFieldArticleId, value)
+}
+
+func (vote *Vote) VoteType() string {
+	return vote.GetString(VotesFieldVoteType)
+}
+
+func (vote *Vote) SetVoteType(value string) {
+	vote.Set(VotesFieldVoteType, value)
+}
+
+func (vote *Vote) Created() types.DateTime {
+	return vote.GetDateTime(VotesFieldCreated)
+}
+
+func (vote *Vote) Updated() types.DateTime {
+	return vote.GetDateTime(VotesFieldUpdated)
+}

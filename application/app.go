@@ -44,6 +44,7 @@ type Application struct {
 	fishPiController   *controller.FishPiController
 	userController     *controller.UserController
 	mooncakeController *controller.MooncakeController
+	voteController     *controller.VoteController
 }
 
 func NewApp() *Application {
@@ -136,6 +137,7 @@ func (application *Application) registerRoutes(event *core.ServeEvent) error {
 	application.fishPiController = controller.NewFishPiController(event)
 	application.userController = controller.NewUserController(event)
 	application.mooncakeController = controller.NewMooncakeController(event)
+	application.voteController = controller.NewVoteController(event)
 
 	event.Router.GET("/test", func(e *core.RequestEvent) error {
 		return e.String(http.StatusOK, "test")
