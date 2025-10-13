@@ -15,6 +15,79 @@
             max-width: 1400px;
             margin: 0 auto;
         }
+
+        /* 用户信息卡片样式 */
+        .user-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1E9FFF;
+        }
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .user-nickname {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .user-name {
+            font-size: 14px;
+            color: #999;
+        }
+        .times-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+        .times-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .times-number {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .login-prompt {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .login-prompt-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
         .section {
             background: white;
             border-radius: 10px;
@@ -79,6 +152,12 @@
         }
         .prize-table tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        /* 高亮我的文章 */
+        .my-article-row {
+            background: #fff3cd !important;
+            border-left: 4px solid #ffc107;
         }
 
         .dice-area {
@@ -234,6 +313,9 @@
                 padding: 8px 5px;
                 font-size: 12px;
             }
+            .user-card {
+                flex-direction: column;
+            }
         }
 
         @media screen and (max-width: 480px) {
@@ -253,6 +335,9 @@
 </head>
 <body>
     <div class="container">
+        <!-- 用户信息卡片 / 登录提示 -->
+        <div id="userStatusSection"></div>
+
         <!-- 文章排行榜部分 -->
         <div class="section">
             <div class="section-title">
@@ -328,6 +413,124 @@
             var table = layui.table;
             var layer = layui.layer;
 
+            // 全局用户信息
+            let currentUserInfo = null;
+
+            // 检查Cookie中的token
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) {
+                    const token = parts.pop().split(';').shift();
+                    console.log('获取到的token:', token ? '存在' : '不存在');
+                    return token;
+                }
+                console.log('Cookie中未找到token');
+                return null;
+            }
+
+            // 检查用户是否已登录
+            async function checkLoginStatus() {
+                const token = getCookie('token');
+                console.log('开始检查登录状态, token:', token ? '已获取' : '未获取');
+
+                if (!token) {
+                    console.log('未找到token，判断为未登录');
+                    return false;
+                }
+
+                try {
+                    console.log('正在请求 /user/me 接口...');
+                    const response = await fetch('/user/me', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include' // 确保携带cookie
+                    });
+
+                    console.log('API响应状态:', response.status, response.statusText);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('获取到用户信息:', data);
+                        currentUserInfo = {
+                            articleId: data.article_id,
+                            articleThankCnt: data.article_thank_cnt || 0,
+                            articleTitle: data.article_title || '',
+                            avatar: data.avatar,
+                            defaultTimes: data.default_mooncake_gambling_times || 0,
+                            drawTimes: data.draw_times || 0,
+                            name: data.name,
+                            nickname: data.nickname,
+                            oId: data.o_id,
+                            restTimes: data.rest_times || 0
+                        };
+                        console.log('用户信息已保存:', currentUserInfo);
+                        return true;
+                    } else {
+                        const errorText = await response.text();
+                        console.error('API请求失败:', response.status, errorText);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('检查登录状态失败:', error);
+                    return false;
+                }
+            }
+
+            // 更新用户信息显示
+            function updateUserStatusDisplay() {
+                const userStatusSection = document.getElementById('userStatusSection');
+
+                if (!currentUserInfo) {
+                    // 未登录状态
+                    userStatusSection.innerHTML = `
+                        <div class="login-prompt">
+                            <div class="login-prompt-text">
+                                🎉 您好，欢迎来到福利活动！请先登录您的账号参与博饼抽奖。
+                            </div>
+                            <div>
+                                <a href="/fishpi/login" class="layui-btn layui-btn-normal layui-btn-lg">
+                                    <i class="layui-icon layui-icon-user"></i> 立即登录
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 已登录状态 - 计算总次数
+                const totalTimes = currentUserInfo.defaultTimes + currentUserInfo.articleThankCnt;
+
+                userStatusSection.innerHTML = `
+                    <div class="user-card">
+                        <div class="user-info">
+                            <img src="${currentUserInfo.avatar}" alt="avatar" class="user-avatar" onerror="this.src='https://file.fishpi.cn/default-avatar.png'">
+                            <div class="user-details">
+                                <div class="user-nickname">${currentUserInfo.nickname || currentUserInfo.name}</div>
+                                <div class="user-name">@${currentUserInfo.name}</div>
+                                ${currentUserInfo.articleTitle ? `<div style="font-size: 12px; color: #1E9FFF; margin-top: 3px;">📝 ${currentUserInfo.articleTitle}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="times-info">
+                            <div class="times-item">
+                                <span>总次数：</span>
+                                <span class="times-number">${totalTimes}</span>
+                                <span style="font-size: 12px; opacity: 0.8;">(默认${currentUserInfo.defaultTimes} + 文章感谢${currentUserInfo.articleThankCnt})</span>
+                            </div>
+                            <div class="times-item">
+                                <span>剩余次数：</span>
+                                <span class="times-number" style="color: #FFD700;">${currentUserInfo.restTimes}</span>
+                            </div>
+                            <div class="times-item" style="font-size: 12px; opacity: 0.9;">
+                                <span>已使用：${totalTimes - currentUserInfo.restTimes} 次</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             // 检查 URL 参数
             function checkURLParams() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -363,8 +566,23 @@
                 }
             }
 
-            // 页面加载时检查URL参数
-            checkURLParams();
+            // 页面初始化
+            async function initPage() {
+                // 检查登录状态
+                const isLoggedIn = await checkLoginStatus();
+
+                // 更新用户状态显示
+                updateUserStatusDisplay();
+
+                // 检查URL参数
+                checkURLParams();
+
+                // 加载奖励数据
+                loadRewards();
+
+                // 渲染文章排行榜
+                renderArticleTable();
+            }
 
             // 全局奖励数据
             let rewardsData = [];
@@ -390,7 +608,6 @@
                 const prizeTableBody = document.querySelector('.prize-table tbody');
                 if(!prizeTableBody) return;
 
-                // 清空现有内容
                 prizeTableBody.innerHTML = '';
 
                 if(rewardsData.length === 0) {
@@ -398,14 +615,10 @@
                     return;
                 }
 
-                // 遍历每个 reward（已经按 level 倒序）
                 rewardsData.forEach(reward => {
                     const awards = reward.expand && reward.expand.awards_via_rewardId ? reward.expand.awards_via_rewardId : [];
-
-                    // 按 award level 排序（倒序）
                     awards.sort((a, b) => (b.level || 0) - (a.level || 0));
 
-                    // 如果没有关联的 awards，显示一行reward信息
                     if(awards.length === 0) {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -420,11 +633,9 @@
                         return;
                     }
 
-                    // 为每个 award 创建一行
                     awards.forEach((award, index) => {
                         const row = document.createElement('tr');
 
-                        // 第一行需要添加 rowspan 的奖励等级列
                         if(index === 0) {
                             const rewardCell = document.createElement('td');
                             rewardCell.rowSpan = awards.length;
@@ -433,19 +644,16 @@
                             row.appendChild(rewardCell);
                         }
 
-                        // 奖项名称
                         const nameCell = document.createElement('td');
                         nameCell.style.cssText = 'font-weight: bold; color: #1E9FFF;';
                         nameCell.textContent = award.name || '-';
                         row.appendChild(nameCell);
 
-                        // 奖项描述
                         const descCell = document.createElement('td');
                         descCell.style.cssText = 'font-size: 12px; color: #666;';
                         descCell.textContent = award.description || '-';
                         row.appendChild(descCell);
 
-                        // 积分（只在第一行显示，使用rowspan）
                         if(index === 0) {
                             const pointCell = document.createElement('td');
                             pointCell.rowSpan = awards.length;
@@ -453,14 +661,12 @@
                             pointCell.textContent = reward.point || 0;
                             row.appendChild(pointCell);
 
-                            // 数量（amount）
                             const amountCell = document.createElement('td');
                             amountCell.rowSpan = awards.length;
                             amountCell.style.cssText = 'font-weight: 500; color: #666; text-align: center; vertical-align: middle;';
                             amountCell.textContent = reward.amount || '-';
                             row.appendChild(amountCell);
 
-                            // 备注（more）
                             const moreCell = document.createElement('td');
                             moreCell.rowSpan = awards.length;
                             moreCell.style.cssText = 'color: #999; text-align: left; vertical-align: middle; font-size: 12px;';
@@ -473,177 +679,169 @@
                 });
             }
 
-            // 页面加载时获取奖励数据
-            loadRewards();
-
             // 文章排行榜表格
-            table.render({
-                elem: '#articleTable',
-                url: '/api/collections/articles/records?expand=userId&sort=-createdAt',
-                height: 500,
-                page: true,
-                limit: 10,
-                limits: [10, 20, 50, 100],
-                cols: [[
-                    {field: 'title', title: '文章标题', width: 350, templet: function(d){
-                        return '<a href="https://fishpi.cn/article/' + d.oId + '" target="_blank" style="color: #1E9FFF; text-decoration: none;">' + d.title + '</a>';
-                    }},
-                    {field: 'expand', title: '作者', width: 200, templet: function(d){
-                        if(d.expand && d.expand.userId) {
-                            const user = d.expand.userId;
-                            const displayName = user.nickname || user.name || '-';
-                            const memberName = user.name || '';
-                            const avatar = user.avatar || '';
-                            const avatarHtml = '<img src="' + avatar + '" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />';
-                            if(memberName) {
-                                const memberUrl = 'https://fishpi.cn/member/' + encodeURIComponent(memberName);
-                                return '<a href="' + memberUrl + '" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">' +
-                                       avatarHtml +
-                                       '<span>' + displayName + '</span>' +
-                                       '</a>';
+            function renderArticleTable() {
+                table.render({
+                    elem: '#articleTable',
+                    url: '/api/collections/articles/records?expand=userId&sort=-createdAt',
+                    height: 500,
+                    page: true,
+                    limit: 10,
+                    limits: [10, 20, 50, 100],
+                    cols: [[
+                        {field: 'title', title: '文章标题', width: 350, templet: function(d){
+                            return '<a href="https://fishpi.cn/article/' + d.oId + '" target="_blank" style="color: #1E9FFF; text-decoration: none;">' + d.title + '</a>';
+                        }},
+                        {field: 'expand', title: '作者', width: 200, templet: function(d){
+                            if(d.expand && d.expand.userId) {
+                                const user = d.expand.userId;
+                                const displayName = user.nickname || user.name || '-';
+                                const memberName = user.name || '';
+                                const avatar = user.avatar || '';
+                                const avatarHtml = '<img src="' + avatar + '" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" onerror="this.src=\'https://file.fishpi.cn/default-avatar.png\'" />';
+                                if(memberName) {
+                                    const memberUrl = 'https://fishpi.cn/member/' + encodeURIComponent(memberName);
+                                    return '<a href="' + memberUrl + '" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">' +
+                                           avatarHtml +
+                                           '<span>' + displayName + '</span>' +
+                                           '</a>';
+                                }
+                                return '<div style="display: flex; align-items: center; gap: 8px;">' + avatarHtml + '<span>' + displayName + '</span></div>';
                             }
-                            return '<div style="display: flex; align-items: center; gap: 8px;">' + avatarHtml + '<span>' + displayName + '</span></div>';
+                            return '-';
+                        }},
+                        {field: 'viewCount', title: '浏览量', width: 100, sort: true},
+                        {field: 'goodCnt', title: '点赞量', width: 100, sort: true},
+                        {field: 'commentCount', title: '评论数', width: 100, sort: true},
+                        {field: 'collectCnt', title: '收藏量', width: 100, sort: true},
+                        {field: 'thankCnt', title: '感谢数', width: 100, sort: true},
+                        {field: 'created', title: '创建时间', width: 180, sort: true, templet: function(d){
+                            return formatDate(d.createdAt || d.created);
+                         }},
+                         {field: 'updated', title: '更新时间', width: 180, sort: true, templet: function(d){
+                            return formatDate(d.updatedAt || d.updated);
+                         }}
+                    ]],
+                    parseData: function(res){
+                        return {
+                            "code": 0,
+                            "msg": "",
+                            "count": res.totalItems,
+                            "data": res.items
+                        };
+                    },
+                    done: function(res, curr, count){
+                        // 高亮当前用户的文章
+                        if(currentUserInfo && currentUserInfo.articleId) {
+                            res.data.forEach((item, index) => {
+                                if(item.id === currentUserInfo.articleId) {
+                                    const row = document.querySelector(`#articleTable + .layui-table-view .layui-table-body tr[data-index="${index}"]`);
+                                    if(row) {
+                                        row.classList.add('my-article-row');
+                                    }
+                                }
+                            });
                         }
-                        return '-';
-                    }},
-                    {field: 'viewCount', title: '浏览量', width: 100, sort: true},
-                    {field: 'goodCnt', title: '点赞量', width: 100, sort: true},
-                    {field: 'commentCount', title: '评论数', width: 100, sort: true},
-                    {field: 'collectCnt', title: '收藏量', width: 100, sort: true},
-                    {field: 'thankCnt', title: '感谢数', width: 100, sort: true},
-                    {field: 'created', title: '创建时间', width: 180, sort: true, templet: function(d){
-                        // prefer createdAt (original article timestamp) and fall back to created (PB metadata)
-                        return formatDate(d.createdAt || d.created);
-                     }},
-                     {field: 'updated', title: '更新时间', width: 180, sort: true, templet: function(d){
-                        return formatDate(d.updatedAt || d.updated);
-                     }}
-                ]],
-                parseData: function(res){
-                    return {
-                        "code": 0,
-                        "msg": "",
-                        "count": res.totalItems,
-                        "data": res.items
-                    };
-                }
-            });
+                    }
+                });
+            }
 
             // 博饼游戏逻辑
             let isRolling = false;
             let history = [];
 
-            document.getElementById('rollBtn').addEventListener('click', function(){
+            document.getElementById('rollBtn').addEventListener('click', async function(){
                 if(isRolling) return;
 
-                isRolling = true;
-
-                // 先生成所有骰子的结果
-                const result = rollDices();
-                const dices = document.querySelectorAll('.dice');
-
-                // 第一步：所有骰子回到初始状态并一起开始摇动
-                dices.forEach(dice => {
-                    dice.textContent = '?';
-                    dice.classList.add('rolling');
-                });
-
-                // 第二步：1秒后，依次显示每个骰子的结果
-                setTimeout(() => {
-                    let completedCount = 0;
-
-                    dices.forEach((dice, index) => {
-                        setTimeout(() => {
-                            dice.classList.remove('rolling');
-                            dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
-
-                            completedCount++;
-
-                            // 所有骰子都完成后
-                            if(completedCount === 6) {
-                                // 添加到历史记录
-                                addHistory(result);
-
-                                isRolling = false;
-
-                                // 显示提示
-                                setTimeout(() => {
-                                    layer.msg('恭喜获得：' + result.prizeName, {icon: 1, time: 2000});
-                                }, 200);
-                            }
-                        }, index * 200); // 每个骰子间隔200ms显示结果
+                // 检查用户是否登录
+                if(!currentUserInfo) {
+                    layer.confirm('您还未登录，是否前往登录？', {
+                        icon: 3,
+                        title: '提示',
+                        btn: ['去登录', '取消']
+                    }, function(index){
+                        window.location.href = '/fishpi/login';
+                        layer.close(index);
                     });
-                }, 1000); // 所有骰子一起摇动1秒后开始依次显示结果
+                    return;
+                }
+
+                // 检查用户剩余博饼次数
+                if(currentUserInfo.restTimes <= 0) {
+                    layer.msg('您的博饼次数已用完，请明天再来吧！', {icon: 2, time: 2000});
+                    return;
+                }
+
+                isRolling = true;
+                const rollButton = document.getElementById('rollBtn');
+                rollButton.disabled = true;
+
+                try {
+                    // 调用服务器博饼接口
+                    const token = getCookie('token');
+                    const response = await fetch('/mooncake/gambling', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if(!response.ok) {
+                        throw new Error('博饼请求失败');
+                    }
+
+                    const result = await response.json();
+
+                    // 显示骰子动画
+                    const dices = document.querySelectorAll('.dice');
+                    dices.forEach(dice => {
+                        dice.textContent = '?';
+                        dice.classList.add('rolling');
+                    });
+
+                    // 1秒后依次显示结果
+                    setTimeout(() => {
+                        let completedCount = 0;
+
+                        dices.forEach((dice, index) => {
+                            setTimeout(() => {
+                                dice.classList.remove('rolling');
+                                dice.innerHTML = `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(result.dices[index])}" alt="dice-${result.dices[index]}" style="width: 60px; height: 60px;" />`;
+
+                                completedCount++;
+
+                                if(completedCount === 6) {
+                                    // 更新剩余次数
+                                    currentUserInfo.restTimes = result.rest_times || (currentUserInfo.restTimes - 1);
+                                    updateUserStatusDisplay();
+
+                                    // 添加到历史记录
+                                    addHistory({
+                                        dices: result.dices,
+                                        prizeName: result.prize_name,
+                                        prizeLevel: result.prize_level
+                                    });
+
+                                    isRolling = false;
+                                    rollButton.disabled = false;
+
+                                    // 显示提示
+                                    setTimeout(() => {
+                                        layer.msg('恭喜获得：' + result.prize_name, {icon: 1, time: 2000});
+                                    }, 200);
+                                }
+                            }, index * 200);
+                        });
+                    }, 1000);
+
+                } catch(error) {
+                    console.error('博饼失败:', error);
+                    layer.msg('博饼失败，请稍后重试', {icon: 2});
+                    isRolling = false;
+                    rollButton.disabled = false;
+                }
             });
-
-            // 模拟掷骰子
-            function rollDices() {
-                const dices = [];
-                for(let i = 0; i < 6; i++) {
-                    dices.push(Math.floor(Math.random() * 6) + 1);
-                }
-
-                const prize = calculatePrize(dices);
-                return {
-                    dices: dices,
-                    prizeName: prize.name,
-                    prizeLevel: prize.level
-                };
-            }
-
-            // 计算奖励
-            function calculatePrize(dices) {
-                const counts = {};
-                dices.forEach(d => {
-                    counts[d] = (counts[d] || 0) + 1;
-                });
-
-                const count4 = counts[4] || 0;
-
-                if(count4 === 6) return {name: '状元六勃红', level: 12};
-                if(count4 === 4 && counts[1] === 2) return {name: '状元插金花', level: 11};
-                if(counts[1] === 6) return {name: '状元遍地锦', level: 10};
-
-                for(let d in counts) {
-                    const dn = Number(d);
-                    if(counts[d] === 6 && dn !== 1 && dn !== 4) {
-                        return {name: '状元黑六勃', level: 9};
-                    }
-                }
-
-                if(count4 === 5) return {name: '状元五红', level: 8};
-
-                for(let d in counts) {
-                    const dn = Number(d);
-                    if(counts[d] === 5 && dn !== 4) {
-                        return {name: '状元五子登科', level: 7};
-                    }
-                }
-
-                if(count4 === 4) return {name: '状元四点红', level: 6};
-
-                if(Object.keys(counts).length === 6) {
-                    let hasAll = true;
-                    for(let i = 1; i <= 6; i++) {
-                        if(counts[i] !== 1) hasAll = false;
-                    }
-                    if(hasAll) return {name: '对堂', level: 5};
-                }
-
-                if(count4 === 3) return {name: '三红', level: 4};
-
-                for(let d in counts) {
-                    const dn = Number(d);
-                    if(counts[d] === 4 && dn !== 4) {
-                        return {name: '四进', level: 3};
-                    }
-                }
-
-                if(count4 === 2) return {name: '二举', level: 2};
-                if(count4 === 1) return {name: '一秀', level: 1};
-
-                return {name: '无奖', level: 0};
-            }
 
             // 添加历史记录
             function addHistory(result) {
@@ -653,7 +851,6 @@
                     result: result
                 });
 
-                // 只保留最近20条
                 if(history.length > 20) {
                     history = history.slice(0, 20);
                 }
@@ -665,7 +862,7 @@
             function updateHistoryDisplay() {
                 const historyList = document.getElementById('historyList');
                 if(history.length === 0) {
-                    historyList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无记录</div>';
+                    historyList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无记录，快来试试手气吧！</div>';
                     return;
                 }
 
@@ -683,11 +880,9 @@
             // 格式化日期
             function formatDate(date) {
                 if(!date) return '-';
-                // Accept Date or various string formats from API. Normalize strings like "YYYY-MM-DD hh:mm:ss.sssZ" -> "YYYY-MM-DDThh:mm:ss.sssZ"
                 try {
                     if(typeof date === 'string') {
                         let s = date.trim();
-                        // if contains space and no 'T', replace first space with 'T'
                         if(s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
                             s = s.replace(' ', 'T');
                         }
@@ -708,7 +903,6 @@
                 }
              }
 
-
             // 获取骰子SVG的Base64编码
             function getDiceSVGBase64(d) {
                 const svgs = {
@@ -722,6 +916,9 @@
 
                 return btoa(unescape(encodeURIComponent(svgs[d])));
             }
+
+            // 页面加载时初始化
+            initPage();
         });
     </script>
 </body>

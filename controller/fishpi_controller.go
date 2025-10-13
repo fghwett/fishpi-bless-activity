@@ -210,7 +210,7 @@ func (controller *FishPiController) login(event *core.RequestEvent) error {
 		Path:     "/",
 		MaxAge:   int(user.Collection().AuthToken.DurationTime() / time.Second),
 		Secure:   true,
-		HttpOnly: true,
+		HttpOnly: false,
 		SameSite: http.SameSiteNoneMode,
 	}
 	event.SetCookie(cookie)
