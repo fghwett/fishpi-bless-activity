@@ -1,10 +1,5 @@
-//go:generate go-enum --marshal --names --values --ptr --mustparse
 package model
 
-// ConfigKey
-/*
-ENUM(
-fishpi // 摸鱼派
+const (
+	DefaultMooncakeGamblingTimes = 5
 )
-*/
-type ConfigKey string

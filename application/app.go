@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 /*
@@ -41,6 +42,7 @@ type Application struct {
 	articleService *service.ArticleService
 
 	fishPiController *controller.FishPiController
+	userController   *controller.UserController
 }
 
 func NewApp() *Application {
@@ -90,7 +92,48 @@ func (application *Application) init(event *core.BootstrapEvent) error {
 
 func (application *Application) registerRoutes(event *core.ServeEvent) error {
 
+	event.Router.Bind(
+		&hook.Handler[*core.RequestEvent]{
+			Id:       "cookie_to_header",
+			Priority: apis.DefaultRateLimitMiddlewarePriority - 999,
+			Func: func(event *core.RequestEvent) error {
+				if event.Request.Header.Get("Authorization") != "" {
+					return event.Next()
+				}
+
+				cookie, err := event.Request.Cookie("token")
+				if err != nil {
+					return event.Next()
+				}
+				if err = cookie.Valid(); err != nil {
+					return event.Next()
+				}
+				event.Request.Header.Set("Authorization", cookie.Value)
+
+				return event.Next()
+			},
+		},
+		&hook.Handler[*core.RequestEvent]{
+			Id:       "query_to_header",
+			Priority: apis.DefaultRateLimitMiddlewarePriority - 998,
+			Func: func(event *core.RequestEvent) error {
+				if event.Request.Header.Get("Authorization") != "" {
+					return event.Next()
+				}
+
+				queryAuth := event.Request.URL.Query().Get("authorization")
+				if queryAuth == "" {
+					return event.Next()
+				}
+				event.Request.Header.Set("Authorization", queryAuth)
+
+				return event.Next()
+			},
+		},
+	)
+
 	application.fishPiController = controller.NewFishPiController(event)
+	application.userController = controller.NewUserController(event)
 
 	event.Router.GET("/test", func(e *core.RequestEvent) error {
 		return e.String(http.StatusOK, "test")
