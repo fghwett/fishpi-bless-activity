@@ -1,6 +1,7 @@
 package application
 
 import (
+	"bless-activity/controller"
 	"bless-activity/service"
 	"bless-activity/service/fishpi"
 	"log/slog"
@@ -38,6 +39,8 @@ type Application struct {
 
 	fishPiService  *fishpi.Service
 	articleService *service.ArticleService
+
+	fishPiController *controller.FishPiController
 }
 
 func NewApp() *Application {
@@ -79,24 +82,24 @@ func (application *Application) init(event *core.BootstrapEvent) error {
 	go application.articleService.FetchArticles()
 
 	// 注册路由
-	application.registerRoutes()
+	application.app.OnServe().BindFunc(application.registerRoutes)
 
 	event.App.Logger().Debug("初始化完成")
 	return nil
 }
 
-func (application *Application) registerRoutes() {
-	application.app.OnServe().BindFunc(func(event *core.ServeEvent) error {
+func (application *Application) registerRoutes(event *core.ServeEvent) error {
 
-		event.Router.GET("/test", func(e *core.RequestEvent) error {
-			return e.String(http.StatusOK, "test")
-		})
-		event.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
+	application.fishPiController = controller.NewFishPiController(event)
 
-		event.Router.GET("/test1", func(e *core.RequestEvent) error {
-			return e.String(http.StatusOK, "test1")
-		})
-
-		return event.Next()
+	event.Router.GET("/test", func(e *core.RequestEvent) error {
+		return e.String(http.StatusOK, "test")
 	})
+	event.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
+
+	event.Router.GET("/test1", func(e *core.RequestEvent) error {
+		return e.String(http.StatusOK, "test1")
+	})
+
+	return event.Next()
 }
