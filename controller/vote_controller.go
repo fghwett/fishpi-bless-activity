@@ -35,6 +35,7 @@ func NewVoteController(event *core.ServeEvent) *VoteController {
 func (controller *VoteController) registerRoutes() {
 	group := controller.event.Router.Group("/vote")
 	group.POST("", controller.CreateVote).BindFunc(controller.CheckLogin)
+	group.DELETE("/:id", controller.DeleteVote).BindFunc(controller.CheckLogin)
 	group.GET("/my", controller.GetMyVotes).BindFunc(controller.CheckLogin)
 	group.GET("/rank", controller.GetVoteRank)
 	group.GET("/statistics", controller.GetStatistics)
@@ -127,6 +128,43 @@ func (controller *VoteController) CreateVote(event *core.RequestEvent) error {
 		"success": true,
 		"message": "福签赠送成功",
 		"vote_id": vote.Id,
+	})
+}
+
+// DeleteVote 撤销投票
+func (controller *VoteController) DeleteVote(event *core.RequestEvent) error {
+	logger := controller.makeActionLogger("delete_vote")
+
+	user := model.NewUser(event.Auth)
+	voteId := event.Request.PathValue("id")
+
+	if voteId == "" {
+		return event.BadRequestError("投票ID不能为空", nil)
+	}
+
+	// 查找投票记录
+	vote := new(model.Vote)
+	if err := controller.app.RecordQuery(model.DbNameVotes).
+		Where(dbx.HashExp{model.CommonFieldId: voteId}).
+		One(vote); err != nil {
+		logger.Error("查找投票记录失败", slog.Any("err", err))
+		return event.NotFoundError("投票记录不存在", err)
+	}
+
+	// 验证是否为本人的投票
+	if vote.FromUserId() != user.Id {
+		return event.ForbiddenError("不能撤销他人的投票", nil)
+	}
+
+	// 删除投票记录
+	if err := controller.app.Delete(vote); err != nil {
+		logger.Error("删除投票记录失败", slog.Any("err", err))
+		return event.InternalServerError("删除投票记录失败", err)
+	}
+
+	return event.JSON(http.StatusOK, map[string]any{
+		"success": true,
+		"message": "投票撤销成功",
 	})
 }
 

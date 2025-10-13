@@ -1293,7 +1293,7 @@
                             const user = article.expand && article.expand.userId ? article.expand.userId : {};
                             const displayName = user.nickname || user.name || '未知用户';
                             return `
-                                <div class="article-select-item" data-article-id="${article.id}" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                                <div class="article-select-item" data-article-id="${article.id}" data-article-title="${article.title.replace(/"/g, '&quot;')}" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;">
                                     <img src="${user.avatar || 'https://file.fishpi.cn/default-avatar.png'}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://file.fishpi.cn/default-avatar.png'" />
                                     <div style="flex: 1;">
                                         <div style="font-weight: bold; color: #333;">${article.title}</div>
@@ -1310,35 +1310,43 @@
                             content: `
                                 <div style="padding: 20px;">
                                     <div style="margin-bottom: 15px; color: #666;">
-                                        选择一篇文章赠送${voteName}（每种福签只能赠送一次）
+                                        选择一篇文章赠送${voteName}
                                     </div>
-                                    <div style="max-height: 350px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
+                                    <div id="articleSelectList" style="max-height: 350px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
                                         ${articleListHtml}
                                     </div>
                                 </div>
                             `,
                             success: function(layero, index) {
-                                // 为每个文章项添加点击事件
-                                layero.find('.article-select-item').on('click', function() {
-                                    const articleId = $(this).data('article-id');
-                                    const articleTitle = $(this).find('.article-select-item > div > div:first').text();
+                                // 使用原生JavaScript添加事件
+                                const container = document.getElementById('articleSelectList');
+                                if (!container) return;
 
-                                    layer.confirm(`确认要将${voteName}赠送给这篇文章吗？<br><br>"${articleTitle}"`, {
-                                        icon: 3,
-                                        title: '确认赠送',
-                                        btn: ['确认', '取消']
-                                    }, function(confirmIndex) {
-                                        submitVote(articleId, voteType, voteName);
-                                        layer.close(confirmIndex);
-                                        layer.close(index);
+                                const items = container.querySelectorAll('.article-select-item');
+                                items.forEach(item => {
+                                    // 点击事件
+                                    item.addEventListener('click', function() {
+                                        const articleId = this.getAttribute('data-article-id');
+                                        const articleTitle = this.getAttribute('data-article-title');
+
+                                        layer.confirm(`确认要将${voteName}赠送给这篇文章吗？<br><br>"${articleTitle}"`, {
+                                            icon: 3,
+                                            title: '确认赠送',
+                                            btn: ['确认', '取消']
+                                        }, function(confirmIndex) {
+                                            submitVote(articleId, voteType, voteName);
+                                            layer.close(confirmIndex);
+                                            layer.close(index);
+                                        });
                                     });
-                                });
 
-                                // 添加悬停效果
-                                layero.find('.article-select-item').on('mouseenter', function() {
-                                    $(this).css('background', '#f8f9fa');
-                                }).on('mouseleave', function() {
-                                    $(this).css('background', 'white');
+                                    // 悬停效果
+                                    item.addEventListener('mouseenter', function() {
+                                        this.style.background = '#f8f9fa';
+                                    });
+                                    item.addEventListener('mouseleave', function() {
+                                        this.style.background = 'white';
+                                    });
                                 });
                             }
                         });
@@ -1380,6 +1388,38 @@
                 }
             }
 
+            // 撤销投票
+            async function revokeVote(voteId, voteName) {
+                layer.confirm(`确定要撤销${voteName}的赠送吗？`, {
+                    icon: 3,
+                    title: '确认撤销',
+                    btn: ['确认', '取消']
+                }, async function(index) {
+                    try {
+                        const response = await fetch(`/vote/${voteId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            layer.msg('撤销成功！', {icon: 1, time: 2000});
+                            await loadVoteStatus();
+                            await loadMyVotes();
+                        } else {
+                            const error = await response.json();
+                            layer.msg(error.message || '撤销失败', {icon: 2});
+                        }
+                    } catch (error) {
+                        console.error('撤销失败:', error);
+                        layer.msg('网络错误，请稍后重试', {icon: 2});
+                    }
+                    layer.close(index);
+                });
+            }
+
             // 加载投票排行榜
             async function loadVoteRank() {
                 const voteRankList = document.getElementById('voteRankList');
@@ -1419,8 +1459,8 @@
                                             <img src="${item.user_avatar || 'https://file.fishpi.cn/default-avatar.png'}" alt="avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://file.fishpi.cn/default-avatar.png'" />
                                             <div>
                                                 <div style="font-weight: bold;">${item.user_nickname || item.user_name}</div>
-                                                <div style="font-size: 11px; color: #999;">
-                                                    <a href="https://fishpi.cn/article/${item.article_oid}" target="_blank" style="color: #1E9FFF; text-decoration: none;">${item.article_title.substring(0, 20)}${item.article_title.length > 20 ? '...' : ''}</a>
+                                                <div style="font-size: 11px; color: #1E9FFF;">
+                                                    <a href="https://fishpi.cn/article/${item.article_oid}" target="_blank" style="color: inherit; text-decoration: none; display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.article_title}">${item.article_title}</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -1486,20 +1526,23 @@
                                 ${items.map(item => {
                                     const voteInfo = voteTypeMap[item.vote_type] || { name: '未知', icon: '❓' };
                                     return `
-                                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; flex: 1; min-width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; flex: 1; min-width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative;">
                                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                                                 <span style="font-size: 24px;">${voteInfo.icon}</span>
-                                                <div>
+                                                <div style="flex: 1;">
                                                     <div style="font-weight: bold; color: #333;">${voteInfo.name}</div>
                                                     <div style="font-size: 11px; color: #999;">${formatDate(item.created)}</div>
                                                 </div>
+                                                <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="revokeVote('${item.id}', '${voteInfo.name}')" style="position: absolute; top: 10px; right: 10px;">
+                                                    <i class="layui-icon layui-icon-close"></i> 撤销
+                                                </button>
                                             </div>
                                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 4px;">
                                                 <img src="${item.to_user_avatar || 'https://file.fishpi.cn/default-avatar.png'}" alt="avatar" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://file.fishpi.cn/default-avatar.png'" />
                                                 <div style="flex: 1;">
                                                     <div style="font-weight: bold; color: #333; font-size: 13px;">${item.to_user_nick || item.to_user_name}</div>
                                                     <div style="font-size: 11px; color: #1E9FFF;">
-                                                        <a href="https://fishpi.cn/article/${item.article_oid}" target="_blank" style="color: inherit; text-decoration: none;">${item.article_title.substring(0, 25)}${item.article_title.length > 25 ? '...' : ''}</a>
+                                                        <a href="https://fishpi.cn/article/${item.article_oid}" target="_blank" style="color: inherit; text-decoration: none;" title="${item.article_title}">${item.article_title.substring(0, 25)}${item.article_title.length > 25 ? '...' : ''}</a>
                                                     </div>
                                                 </div>
                                             </div>
