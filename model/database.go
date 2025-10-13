@@ -370,16 +370,17 @@ func (award *Awards) SetDescription(value string) {
 }
 
 const (
-	DbNameHistories        = "histories"
-	HistoriesFieldUserId   = "userId"
-	HistoriesFieldTimes    = "times"
-	HistoriesFieldAwardId  = "awardId"
-	HistoriesFieldRewardId = "rewardId"
-	HistoriesFieldIsTop    = "isTop"
-	HistoriesFieldIsBest   = "isBest"
-	HistoriesFieldDetails  = "details"
-	HistoriesFieldCreated  = "created"
-	HistoriesFieldUpdated  = "updated"
+	DbNameHistories         = "histories"
+	HistoriesFieldUserId    = "userId"
+	HistoriesFieldTimes     = "times"
+	HistoriesFieldAwardId   = "awardId"
+	HistoriesFieldRewardId  = "rewardId"
+	HistoriesFieldIsTop     = "isTop"
+	HistoriesFieldIsBest    = "isBest"
+	HistoriesFieldGotReward = "gotReward"
+	HistoriesFieldDetails   = "details"
+	HistoriesFieldCreated   = "created"
+	HistoriesFieldUpdated   = "updated"
 )
 
 type Histories struct {
@@ -442,6 +443,14 @@ func (history *Histories) IsBest() bool {
 
 func (history *Histories) SetIsBest(value bool) {
 	history.Set(HistoriesFieldIsBest, value)
+}
+
+func (history *Histories) GotReward() bool {
+	return history.GetBool(HistoriesFieldGotReward)
+}
+
+func (history *Histories) SetGotReward(value bool) {
+	history.Set(HistoriesFieldGotReward, value)
 }
 
 func (history *Histories) Details() [6]int {

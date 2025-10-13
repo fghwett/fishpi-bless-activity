@@ -939,7 +939,23 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.06);
             transition: all 0.3s ease;
         }
-        
+
+        .history-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .history-badge.got {
+            background: linear-gradient(90deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+        .history-badge.not-got {
+            background: #f1f3f5;
+            color: #666;
+            border: 1px solid #e9ecef;
+        }
+
         .history-item:hover {
             transform: translateX(5px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.12);
@@ -1730,7 +1746,8 @@
                                 dices: item.dices,
                                 awardName: item.award_name,
                                 prizeName: item.prize_name,
-                                prizeLevel: item.prize_level
+                                prizeLevel: item.prize_level,
+                                gotReward: item.got_reward || false
                             }
                         }));
 
@@ -1815,7 +1832,8 @@
                                         awardName: result.award_name,
                                         prizeName: result.prize_name,
                                         prizeLevel: result.prize_level,
-                                        times_display: result.times_display || ''
+                                        times_display: result.times_display || '',
+                                        gotReward: result.got_reward || false
                                     });
 
                                     isRolling = false;
@@ -1868,8 +1886,11 @@
 
                 historyList.innerHTML = history.map(h => `
                     <div class="history-item">
-                        <div class="history-time">${h.time} ${h.times_display ? (' · ' + h.times_display) : ''}</div>
-                        <div class="history-result">${h.result.awardName} - ${h.result.prizeName}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                            <div class="history-time">${h.time} ${h.times_display ? (' · ' + h.times_display) : ''}</div>
+                            <div><span class="history-badge ${h.result.gotReward ? 'got' : 'not-got'}">${h.result.gotReward ? '已获得' : '未获得'}</span></div>
+                        </div>
+                        <div class="history-result">${h.result.awardName || ''} ${h.result.prizeName ? (' - ' + h.result.prizeName) : ''}</div>
                         <div class="history-dices" style="display: flex; align-items: center; gap: 3px;">
                             ${h.result.dices.map(d => `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(d)}" alt="dice-${d}" class="dice-svg" />`).join('')}
                         </div>

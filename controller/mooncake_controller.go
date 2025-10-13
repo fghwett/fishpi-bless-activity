@@ -189,6 +189,39 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 		history.SetIsBest(false)
 	}
 
+	// 决定是否实际获得奖励（gotReward）
+	got := false
+	if reward != nil {
+		// 查询已经发放的数量（gotReward == true）
+		issuedCount, cntErr := controller.app.CountRecords(model.DbNameHistories, dbx.HashExp{
+			model.HistoriesFieldRewardId:  reward.Id,
+			model.HistoriesFieldGotReward: true,
+		})
+		if cntErr != nil {
+			// 如果查询失败，不中断流程；记录警告，默认不发放
+			logger.Warn("查询已发放奖励数量失败，暂不发放奖励", slog.Any("err", cntErr))
+			issuedCount = 0
+		}
+
+		// 特殊规则：level == 状元四点红（PrizeLevelZSiDianHong）仅当 isBest 为 true 时可获得
+		if result.PrizeLevel == mooncakeGambling.PrizeLevelZSiDianHong {
+			if history.IsBest() && int(issuedCount) < reward.Amount() {
+				got = true
+			} else {
+				got = false
+			}
+		} else {
+			// 其他奖励：先到先得（只要未超出 reward.Amount 就发放）
+			if int(issuedCount) < reward.Amount() {
+				got = true
+			} else {
+				got = false
+			}
+		}
+	}
+
+	history.SetGotReward(got)
+
 	if err := controller.app.Save(history); err != nil {
 		logger.Error("保存历史记录失败", slog.Any("err", err))
 		return event.InternalServerError("保存历史记录失败", err)
@@ -224,6 +257,7 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 			}
 			return ""
 		}(),
+		"got_reward": history.GotReward(),
 	})
 }
 
@@ -264,6 +298,7 @@ func (controller *MooncakeController) GetHistory(event *core.RequestEvent) error
 			"prize_name":  reward.Name(),
 			"is_top":      h.IsTop(),
 			"is_best":     h.IsBest(),
+			"got_reward":  h.GotReward(),
 			"created":     h.Created(),
 		}
 
