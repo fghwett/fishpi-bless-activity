@@ -1048,6 +1048,7 @@
                             time: formatDate(item.created),
                             result: {
                                 dices: item.dices,
+                                awardName: item.award_name,
                                 prizeName: item.prize_name,
                                 prizeLevel: item.prize_level
                             }
@@ -1131,6 +1132,7 @@
                                     // 添加到历史记录（前端显示）
                                     addHistory({
                                         dices: result.dices,
+                                        awardName: result.award_name,
                                         prizeName: result.prize_name,
                                         prizeLevel: result.prize_level
                                     });
@@ -1140,9 +1142,9 @@
 
                                     // 显示提示（包含奖项名称）
                                     setTimeout(() => {
-                                        let message = '恭喜获得：' + result.prize_name;
-                                        if (result.award_name) {
-                                            message += ' - ' + result.award_name;
+                                        let message = '科考结果：' + result.award_name;
+                                        if (result.reward_name) {
+                                            message += ' - ' + result.reward_name;
                                         }
                                         layer.msg(message, {icon: 1, time: 3000});
                                     }, 200);
@@ -1185,7 +1187,7 @@
                 historyList.innerHTML = history.map(h => `
                     <div class="history-item">
                         <div class="history-time">${h.time}</div>
-                        <div class="history-result">${h.result.prizeName}</div>
+                        <div class="history-result">${h.result.awardName} - ${h.result.prizeName}</div>
                         <div class="history-dices" style="display: flex; align-items: center; gap: 3px;">
                             ${h.result.dices.map(d => `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(d)}" alt="dice-${d}" class="dice-svg" />`).join('')}
                         </div>
