@@ -328,6 +328,44 @@
             var table = layui.table;
             var layer = layui.layer;
 
+            // 检查 URL 参数
+            function checkURLParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const from = urlParams.get('from');
+
+                if(from === 'login') {
+                    // 显示登录成功提示
+                    layer.msg('登录成功', {icon: 1, time: 2000});
+                } else if(from === 'register') {
+                    // 显示注册提示弹窗
+                    layer.open({
+                        type: 1,
+                        title: '欢迎参与活动',
+                        area: ['450px', '280px'],
+                        content: `
+                            <div style="padding: 20px; text-align: center;">
+                                <div style="font-size: 16px; color: #333; margin-bottom: 30px; line-height: 1.6;">
+                                    发表文章后，才能参与博饼活动
+                                </div>
+                                <div style="display: flex; gap: 15px; justify-content: center;">
+                                    <a href="https://fishpi.cn/article/1759997269582" target="_blank" class="layui-btn layui-btn-primary layui-btn-lg">
+                                        <i class="layui-icon layui-icon-read"></i> 查看原文
+                                    </a>
+                                    <a href="https://fishpi.cn/post?type=0&tags=福签传情&title=【双节同庆】我的故事" target="_blank" class="layui-btn layui-btn-normal layui-btn-lg">
+                                        <i class="layui-icon layui-icon-edit"></i> 发表文章
+                                    </a>
+                                </div>
+                            </div>
+                        `,
+                        shadeClose: true,
+                        btn: false
+                    });
+                }
+            }
+
+            // 页面加载时检查URL参数
+            checkURLParams();
+
             // 全局奖励数据
             let rewardsData = [];
 
