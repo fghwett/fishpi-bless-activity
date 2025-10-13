@@ -11,6 +11,149 @@
             min-height: 100vh;
             padding: 20px;
         }
+
+        /* 导航头部样式 */
+        .nav-header {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .nav-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .nav-item:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* 活动信息样式 */
+        .activity-info {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .activity-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .activity-organizers {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .organizer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .organizer:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .organizer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #667eea;
+        }
+        .organizer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .organizer-label {
+            font-size: 12px;
+            color: #999;
+        }
+        .organizer-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .organizer-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .activity-details {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .activity-details h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .activity-details-link {
+            color: #fff3cd;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .activity-details-link:hover {
+            text-decoration: underline;
+        }
+        .activity-participate {
+            text-align: center;
+            padding: 20px;
+            background: #fff9e6;
+            border-radius: 10px;
+        }
+        .participate-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+        .participate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -695,13 +838,78 @@
 </head>
 <body>
     <div class="container">
+        <!-- 导航头部 -->
+        <div class="nav-header">
+            <div class="nav-logo">🎊 福签传情活动</div>
+            <nav class="nav-menu">
+                <a href="#activity-info" class="nav-item">📢 活动信息</a>
+                <a href="#article-list" class="nav-item">📝 文章列表</a>
+                <a href="#mooncake-game" class="nav-item">🎲 博饼抽奖</a>
+                <a href="#vote-section" class="nav-item">🎁 投票福签</a>
+            </nav>
+        </div>
+
+        <!-- 活动信息展示部分 -->
+        <div class="activity-info" id="activity-info">
+            <div class="activity-title">
+                🎉 双节同庆·福签传情 | 分享你的佳节故事，赢取湄洲岛专属福运好礼！
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px; font-size: 16px; color: #666;">
+                <strong>本次活动由以下联合举办：</strong>
+            </div>
+
+            <div class="activity-organizers">
+                <a href="https://fishpi.cn/member/8888" target="_blank" class="organizer-link">
+                    <div class="organizer">
+                        <img src="https://file.fishpi.cn/2022/08/blob-fbe21682.png" alt="开摆" class="organizer-avatar" onerror="this.src='https://file.fishpi.cn/default-avatar.png'">
+                        <div class="organizer-info">
+                            <span class="organizer-label">活动发起人</span>
+                            <span class="organizer-name">开摆 (8888)</span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="https://fishpi.cn" target="_blank" class="organizer-link">
+                    <div class="organizer">
+                        <img src="https://fishpi.cn/images/faviconH.png" alt="摸鱼派" class="organizer-avatar">
+                        <div class="organizer-info">
+                            <span class="organizer-label">合作平台</span>
+                            <span class="organizer-name">摸鱼派社区</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="activity-details">
+                <h3>📖 详细规则介绍</h3>
+                <p style="line-height: 1.8; margin-bottom: 10px;">
+                    本次活动旨在庆祝双节，邀请大家分享自己的佳节故事。参与者可通过发表文章、博饼抽奖、投票福签等方式赢取湄洲岛专属福运好礼！
+                </p>
+                <p style="line-height: 1.8;">
+                    <a href="https://fishpi.cn/article/1759997269582" target="_blank" class="activity-details-link">
+                        👉 点击查看完整活动规则
+                    </a>
+                </p>
+            </div>
+
+            <div class="activity-participate">
+                <p style="font-size: 18px; color: #666; margin-bottom: 15px; font-weight: 600;">
+                    💫 快来参与吧，分享你的故事，赢取专属好礼！
+                </p>
+                <a href="https://fishpi.cn/post?type=0&tags=福签传情&title=【双节同庆】我的故事" target="_blank" class="participate-btn">
+                    ✍️ 点击参与活动
+                </a>
+            </div>
+        </div>
+
         <!-- 用户信息卡片 / 登录提示 -->
         <div id="userStatusSection"></div>
 
-        <!-- 文章排行榜部分 -->
-        <div class="section">
+        <!-- 文章列表部分 -->
+        <div class="section" id="article-list">
             <div class="section-title">
-                <i class="layui-icon layui-icon-chart"></i> 文章排行榜
+                <i class="layui-icon layui-icon-read"></i> 文章列表
             </div>
             <div class="article-list" id="articleTable">
                 <!-- 文章列表将通过JavaScript动态插入 -->
@@ -709,7 +917,7 @@
         </div>
 
         <!-- 博饼抽奖部分 -->
-        <div class="section">
+        <div class="section" id="mooncake-game">
             <div class="section-title">
                 <i class="layui-icon layui-icon-gift"></i> 博饼抽奖
             </div>
@@ -775,7 +983,7 @@
         </div>
 
         <!-- 投票福签部分 -->
-        <div class="section">
+        <div class="section" id="vote-section">
             <div class="section-title">
                 <i class="layui-icon layui-icon-flag"></i> 投票福签
             </div>
@@ -1277,7 +1485,7 @@
                                 if (currentPage > 1) {
                                     currentPage--;
                                     renderArticleTable();
-                                    // 滚动到顶部
+                                    // ��动到顶部
                                     document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
                                 }
                             });
