@@ -1270,6 +1270,52 @@
                 return null;
             }
 
+            // 删除指定cookie（尽量覆盖常见域名和path情形）
+            function deleteCookie(name) {
+                try {
+                    // 删除无域名、根路径的cookie
+                    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+
+                    // 尝试带当前域名删除（有些cookie会带domain）
+                    var domain = window.location.hostname;
+                    document.cookie = name + '=; path=/; domain=' + domain + '; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+
+                    // 尝试带点前缀的domain（如 .example.com）
+                    if (domain && domain.indexOf('.') !== -1) {
+                        document.cookie = name + '=; path=/; domain=.' + domain + '; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                    }
+                } catch (e) {
+                    console.warn('删除cookie失败', name, e);
+                }
+            }
+
+            // 退出登录：清除相关cookie并刷新页面
+            function logoutAndReload() {
+                // 尝试清除已知的认证cookie
+                deleteCookie('token');
+                deleteCookie('pb_auth');
+                deleteCookie('pb_auth_token');
+                // 如果需要，可以清除更多cookie名，例如 session, auth 等
+                deleteCookie('session');
+
+                // 若存在 localStorage 相关的 auth key，也尝试清除
+                try {
+                    if (window.localStorage) {
+                        // 常见key清理（按需扩展）
+                        localStorage.removeItem('pb_auth');
+                        localStorage.removeItem('token');
+                    }
+                } catch (e) {
+                    console.warn('清理 localStorage 失败', e);
+                }
+
+                // 小延迟，确保浏览器完成 cookie 写入，再刷新
+                setTimeout(() => {
+                    // 强制刷新并忽略缓存
+                    window.location.reload(true);
+                }, 150);
+            }
+
             // 检查用户是否已登录
             async function checkLoginStatus() {
                 const token = getCookie('token');
@@ -1382,9 +1428,27 @@
                                 <span>已使用：${totalTimes - currentUserInfo.restTimes} 次</span>
                             </div>
                             ${isLimited ? `<div class="times-item" style="font-size: 12px; color: #FFD700; opacity: 1;"><span>⚠️ 抽奖次数已达最大限制${currentUserInfo.maxTimes}次</span></div>` : ''}
+                            <!-- 退出登录按钮 -->
+                            <div style="margin-top:8px; display:flex; justify-content:center;">
+                                <button id="logoutBtn" class="layui-btn layui-btn-primary layui-btn-sm" style="background:#fff; color:#FF6B6B; border:1px solid #ffb4b4;">退出登录</button>
+                            </div>
                         </div>
                     </div>
                 `;
+
+                // 绑定退出登录按钮事件
+                setTimeout(() => {
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            layer.confirm('确定要退出登录吗？', {icon: 3, title: '退出登录', btn: ['退出','取消']}, function(index){
+                                logoutAndReload();
+                                layer.close(index);
+                            });
+                        });
+                    }
+                }, 50);
 
                 // 更新博饼区域的用户信息
                 userStatusDice.innerHTML = `
