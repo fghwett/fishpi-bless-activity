@@ -675,6 +675,7 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
             position: relative;
             overflow: hidden;
+            min-height: 420px; /* 保证与右侧记录面板垂直高度较为平衡，避免按钮被挤出 */
         }
         
         .dice-area::before {
@@ -686,8 +687,22 @@
             height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
             animation: rotate 20s linear infinite;
+            pointer-events: none; /* 防止装饰层拦截按钮点击 */
         }
         
+        /* 按钮容器，保证按钮在竖直方向上居中显示且不被覆盖 */
+        .dice-actions {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 6px;
+            z-index: 2;
+        }
+
+        /* 确保伪元素不会拦截鼠标事件 */
+        .dice-area * { pointer-events: auto; }
+
         @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -808,20 +823,29 @@
         }
         
         #rollBtn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            align-self: center; /* 在 flex 容器中水平居中 */
             position: relative;
-            z-index: 1;
-            padding: 15px 50px;
+            z-index: 2; /* 提高层级以确保在装饰性伪元素之上 */
+            padding: 12px 28px;
+            min-width: 180px;
+            max-width: 80%;
             font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 6px 20px rgba(255,0,0,0.3);
-            transition: all 0.3s ease;
+            font-weight: 700;
+            border-radius: 999px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
             border: none;
+            background: linear-gradient(90deg, #FF6B6B 0%, #FF3B3B 100%);
+            color: white;
+            cursor: pointer;
         }
         
         #rollBtn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255,0,0,0.4);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.22);
         }
         
         #rollBtn:disabled {
@@ -830,6 +854,15 @@
             transform: none;
         }
         
+        /* 图标在按钮内的间距与垂直对齐 */
+        #rollBtn i {
+            margin-right: 8px;
+            font-size: 18px;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+
         .result-display {
             text-align: center;
             color: white;
@@ -1113,9 +1146,13 @@
                                 <div class="dice" id="dice5">?</div>
                                 <div class="dice" id="dice6">?</div>
                             </div>
-                            <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
-                                <i class="layui-icon layui-icon-play"></i> 开始博饼
-                            </button>
+
+                            <!-- 按钮容器，保证按钮在竖直方向上居中显示且不被覆盖 -->
+                            <div class="dice-actions">
+                                <button class="layui-btn layui-btn-danger layui-btn-lg" id="rollBtn">
+                                    <i class="layui-icon layui-icon-play"></i> 开始博饼
+                                </button>
+                            </div>
                         </div>
 
                         <!-- 右侧：博饼记录 -->
