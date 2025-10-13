@@ -75,6 +75,7 @@ func (controller *UserController) GetMe(event *core.RequestEvent) error {
 	restTimes := model.DefaultMooncakeGamblingTimes + article.ThankCnt() - int(drawTimes)
 
 	return event.JSON(http.StatusOK, map[string]any{
+		"id":                              user.Id,
 		"o_id":                            user.OId(),
 		"name":                            user.Name(),
 		"nickname":                        user.Nickname(),

@@ -686,6 +686,7 @@
                         const data = await response.json();
                         console.log('获取到用户信息:', data);
                         currentUserInfo = {
+                            id: data.id,
                             articleId: data.article_id,
                             articleThankCnt: data.article_thank_cnt || 0,
                             articleTitle: data.article_title || '',
@@ -1298,18 +1299,36 @@
                     .then(data => {
                         const articles = data.items || [];
 
-                        // 过滤掉自己的文章
-                        const otherArticles = articles.filter(a => a.userId !== currentUserInfo.articleId);
-
-                        if (otherArticles.length === 0) {
-                            layer.msg('暂无其他用户的文章可供投票', {icon: 2});
+                        if (articles.length === 0) {
+                            layer.msg('暂无文章可供投票', {icon: 2});
                             return;
                         }
 
-                        // 构建文章选择列表
-                        const articleListHtml = otherArticles.map((article, index) => {
+                        // 构建文章选择列表，保留自己的文章但添加蒙版
+                        const articleListHtml = articles.map((article, index) => {
                             const user = article.expand && article.expand.userId ? article.expand.userId : {};
                             const displayName = user.nickname || user.name || '未知用户';
+                            const isMyArticle = article.userId === currentUserInfo.id;
+
+                            // 自己的文章添加蒙版样式
+                            if (isMyArticle) {
+                                return `
+                                    <div class="article-select-item" style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; position: relative; opacity: 0.5; cursor: not-allowed;">
+                                        <img src="${user.avatar || 'https://file.fishpi.cn/default-avatar.png'}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://file.fishpi.cn/default-avatar.png'" />
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; color: #999;">${article.title}</div>
+                                            <div style="font-size: 12px; color: #bbb;">作者: ${displayName}</div>
+                                        </div>
+                                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                                            <div style="background: linear-gradient(135deg, #FFB800 0%, #FF8C00 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; box-shadow: 0 2px 8px rgba(255, 184, 0, 0.3);">
+                                                <i style="margin-right: 5px;">✋</i> 把机会留给其他人吧
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+
+                            // 其他人的文章正常显示
                             return `
                                 <div class="article-select-item" data-article-id="${article.id}" data-article-title="${article.title.replace(/"/g, '&quot;')}" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;">
                                     <img src="${user.avatar || 'https://file.fishpi.cn/default-avatar.png'}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://file.fishpi.cn/default-avatar.png'" />
@@ -1340,7 +1359,7 @@
                                 const container = document.getElementById('articleSelectList');
                                 if (!container) return;
 
-                                const items = container.querySelectorAll('.article-select-item');
+                                const items = container.querySelectorAll('.article-select-item[data-article-id]');
                                 items.forEach(item => {
                                     // 点击事件
                                     item.addEventListener('click', function() {
