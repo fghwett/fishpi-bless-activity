@@ -184,9 +184,12 @@ func (controller *FishPiController) login(event *core.RequestEvent) error {
 	logger = logger.With(slog.String("id", user.Id), slog.String("name", user.GetString("name")))
 
 	// 更新用户资料
-	if fishpiUserInfo.Name() != user.Name() || fishpiUserInfo.UserAvatarURL != user.Avatar() {
-		if fishpiUserInfo.Name() != user.Name() {
-			user.SetName(fishpiUserInfo.Name())
+	if fishpiUserInfo.UserName != user.Name() || fishpiUserInfo.UserNickname != user.Nickname() || fishpiUserInfo.UserAvatarURL != user.Avatar() {
+		if fishpiUserInfo.UserName != user.Name() {
+			user.SetName(fishpiUserInfo.UserName)
+		}
+		if fishpiUserInfo.UserNickname != user.Nickname() {
+			user.SetNickname(fishpiUserInfo.UserNickname)
 		}
 		if fishpiUserInfo.UserAvatarURL != user.Avatar() {
 			user.SetAvatar(fishpiUserInfo.UserAvatarURL)
