@@ -213,6 +213,39 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 		return event.InternalServerError("保存历史记录失败", err)
 	}
 
+	// 当抽到四进及以上的奖励时，发送消息到聊天室进行活动推广
+	if result.PrizeLevel >= mooncakeGambling.PrizeLevelSiJin || (user.Name() == "8888" && result.PrizeLevel > mooncakeGambling.PrizeLevelNone) {
+		go func() {
+			// 构建聊天室消息
+			var message string
+			if got {
+				// 获得了实际奖励
+				message = fmt.Sprintf("🎉 恭喜 @%s 在活动《[双节同庆·福签传情](https://fishpi.cn/article/1759997269582)》博中了 **%s**（%s），获得奖励：%d积分！",
+					user.Name(), selectedAward.Name(), reward.Name(), reward.Point())
+			} else {
+				// 未获得实际奖励（已发完或不符合条件）
+				message = fmt.Sprintf("🎲 @%s 在活动《[双节同庆·福签传情](https://fishpi.cn/article/1759997269582)》博中了 **%s**（%s）！",
+					user.Name(), selectedAward.Name(), reward.Name())
+			}
+
+			// 添加活动链接
+			appUrl := controller.app.Settings().Meta.AppURL
+			message += fmt.Sprintf("\n\n> 👉 [点击参与活动](%s)", appUrl)
+
+			// 发送到聊天室（异步，不影响主流程）
+			if !controller.app.IsDev() {
+				req := &fishpi.PostChatroomSendRequest{
+					Content: message,
+				}
+				if _, err := controller.fishpiService.PostChatroomSend(req); err != nil {
+					logger.Error("发送聊天室消息失败", slog.Any("err", err))
+				}
+			} else {
+				logger.Info("开发模式，跳过发送聊天室消息", slog.String("message", message))
+			}
+		}()
+	}
+
 	// 发放积分奖励（仅当获得奖励且不是状元级别）
 	if got && reward.Point() > 0 && !result.PrizeLevel.IsTop() {
 		// 创建积分订单记录，状态为待发放
