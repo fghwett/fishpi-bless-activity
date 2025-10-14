@@ -234,7 +234,10 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 			} else {
 				// 进行积分发放
 				memo := fmt.Sprintf("%s 交易单号：%s", pointsRecord.Memo(), pointsRecord.Id)
-				distributeErr := controller.fishpiService.Distribute(user.Name(), reward.Point(), memo)
+				var distributeErr error
+				if !controller.app.IsDev() {
+					distributeErr = controller.fishpiService.Distribute(user.Name(), reward.Point(), memo)
+				}
 
 				if distributeErr != nil {
 					// 发放失败，更新订单状态
