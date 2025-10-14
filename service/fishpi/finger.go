@@ -83,3 +83,14 @@ func (service *Service) GetUser(username string) (*GetUserReply, error) {
 
 	return result, nil
 }
+
+// Distribute 发放积分的便捷方法
+func (service *Service) Distribute(username string, point int, memo string) error {
+	req := &EditPointReq{
+		UserName: username,
+		Point:    point,
+		Memo:     memo,
+	}
+	_, err := service.EditPoint(req)
+	return err
+}

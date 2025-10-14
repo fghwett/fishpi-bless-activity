@@ -15,6 +15,7 @@ var (
 	_ core.RecordProxy = (*Article)(nil)
 	_ core.RecordProxy = (*Awards)(nil)
 	_ core.RecordProxy = (*Histories)(nil)
+	_ core.RecordProxy = (*Points)(nil)
 )
 
 const (
@@ -540,4 +541,87 @@ func (vote *Vote) Created() types.DateTime {
 
 func (vote *Vote) Updated() types.DateTime {
 	return vote.GetDateTime(VotesFieldUpdated)
+}
+
+const (
+	DbNamePoints         = "points"
+	PointsFieldUserId    = "userId"
+	PointsFieldHistoryId = "historyId"
+	PointsFieldPoint     = "point"
+	PointsFieldStatus    = "status"
+	PointsFieldMemo      = "memo"
+	PointsFieldError     = "error"
+	PointsFieldCreated   = "created"
+	PointsFieldUpdated   = "updated"
+)
+
+type Points struct {
+	core.BaseRecordProxy
+}
+
+func NewPoints(record *core.Record) *Points {
+	points := new(Points)
+	points.SetProxyRecord(record)
+	return points
+}
+
+func NewPointsFromCollection(collection *core.Collection) *Points {
+	record := core.NewRecord(collection)
+	return NewPoints(record)
+}
+
+func (points *Points) UserId() string {
+	return points.GetString(PointsFieldUserId)
+}
+
+func (points *Points) SetUserId(value string) {
+	points.Set(PointsFieldUserId, value)
+}
+
+func (points *Points) HistoryId() string {
+	return points.GetString(PointsFieldHistoryId)
+}
+
+func (points *Points) SetHistoryId(value string) {
+	points.Set(PointsFieldHistoryId, value)
+}
+
+func (points *Points) Point() int {
+	return points.GetInt(PointsFieldPoint)
+}
+
+func (points *Points) SetPoint(value int) {
+	points.Set(PointsFieldPoint, value)
+}
+
+func (points *Points) Status() PointStatus {
+	return MustParsePointStatus(points.GetString(PointsFieldStatus))
+}
+
+func (points *Points) SetStatus(value PointStatus) {
+	points.Set(PointsFieldStatus, value.String())
+}
+
+func (points *Points) Memo() string {
+	return points.GetString(PointsFieldMemo)
+}
+
+func (points *Points) SetMemo(value string) {
+	points.Set(PointsFieldMemo, value)
+}
+
+func (points *Points) Error() string {
+	return points.GetString(PointsFieldError)
+}
+
+func (points *Points) SetError(value string) {
+	points.Set(PointsFieldError, value)
+}
+
+func (points *Points) Created() types.DateTime {
+	return points.GetDateTime(PointsFieldCreated)
+}
+
+func (points *Points) Updated() types.DateTime {
+	return points.GetDateTime(PointsFieldUpdated)
 }

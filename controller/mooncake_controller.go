@@ -2,9 +2,10 @@ package controller
 
 import (
 	"bless-activity/model"
+	"bless-activity/service/fishpi"
 	"bless-activity/service/mooncakeGambling"
+	"fmt"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
 
 	"github.com/pocketbase/dbx"
@@ -15,20 +16,22 @@ type MooncakeController struct {
 	event *core.ServeEvent
 	app   core.App
 
-	logger *slog.Logger
-	game   *mooncakeGambling.MooncakeGame
+	logger        *slog.Logger
+	game          *mooncakeGambling.MooncakeGame
+	fishpiService *fishpi.Service
 }
 
-func NewMooncakeController(event *core.ServeEvent) *MooncakeController {
+func NewMooncakeController(event *core.ServeEvent, fishpiService *fishpi.Service) *MooncakeController {
 	logger := event.App.Logger().With(
 		slog.String("controller", "mooncake"),
 	)
 
 	controller := &MooncakeController{
-		event:  event,
-		app:    event.App,
-		logger: logger,
-		game:   mooncakeGambling.NewMooncakeGame(),
+		event:         event,
+		app:           event.App,
+		logger:        logger,
+		game:          mooncakeGambling.NewMooncakeGame(),
+		fishpiService: fishpiService,
 	}
 
 	controller.registerRoutes()
@@ -99,38 +102,21 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 	result := controller.game.Play()
 
 	// 根据 PrizeLevel 查找对应的 awards（可能有多个同等级的奖项）
-	awards := []*model.Awards{}
-	if err := controller.app.RecordQuery(model.DbNameAwards).
+	selectedAward := new(model.Awards)
+	if err = controller.app.RecordQuery(model.DbNameAwards).
 		Where(dbx.HashExp{model.AwardsFieldLevel: int(result.PrizeLevel)}).
-		All(&awards); err != nil {
+		One(selectedAward); err != nil {
 		logger.Error("查找奖项失败", slog.Any("err", err))
 		return event.InternalServerError("查找奖项失败", err)
 	}
 
-	var selectedAward *model.Awards
-	var reward *model.Reward
-
-	if len(awards) > 0 {
-		// 从同等级的奖项中随机选择一个
-		selectedAward = awards[rand.IntN(len(awards))]
-
-		// 根据选中的奖项查找对应的 reward
-		reward = new(model.Reward)
-		if err := controller.app.RecordQuery(model.DbNameRewards).
-			Where(dbx.HashExp{model.CommonFieldId: selectedAward.RewardId()}).
-			One(reward); err != nil {
-			logger.Error("查找奖励记录失败", slog.Any("err", err))
-			return event.InternalServerError("查找奖励记录失败", err)
-		}
-	} else {
-		// 如果没有找到对应的奖项，尝试查找对应level的reward
-		reward = new(model.Reward)
-		if err := controller.app.RecordQuery(model.DbNameRewards).
-			Where(dbx.HashExp{model.RewardsFieldLevel: int(result.PrizeLevel)}).
-			One(reward); err != nil {
-			logger.Warn("未找到对应的奖励记录", slog.Any("prize_level", result.PrizeLevel))
-			// 继续执行，不中断流程
-		}
+	// 根据选中的奖项查找对应的 reward
+	reward := new(model.Reward)
+	if err = controller.app.RecordQuery(model.DbNameRewards).
+		Where(dbx.HashExp{model.CommonFieldId: selectedAward.RewardId()}).
+		One(reward); err != nil {
+		logger.Error("查找奖励记录失败", slog.Any("err", err))
+		return event.InternalServerError("查找奖励记录失败", err)
 	}
 
 	// 创建历史记录
@@ -225,6 +211,48 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 	if err := controller.app.Save(history); err != nil {
 		logger.Error("保存历史记录失败", slog.Any("err", err))
 		return event.InternalServerError("保存历史记录失败", err)
+	}
+
+	// 发放积分奖励（仅当获得奖励且不是状元级别）
+	if got && reward.Point() > 0 && !result.PrizeLevel.IsTop() {
+		// 创建积分订单记录，状态为待发放
+		pointsCollection, err := controller.app.FindCollectionByNameOrId(model.DbNamePoints)
+		if err != nil {
+			logger.Error("查找points集合失败", slog.Any("err", err))
+			// 不中断流程，只记录错误
+		} else {
+			pointsRecord := model.NewPointsFromCollection(pointsCollection)
+			pointsRecord.SetUserId(user.Id)
+			pointsRecord.SetHistoryId(history.Id)
+			pointsRecord.SetPoint(reward.Point())
+			pointsRecord.SetStatus(model.PointStatusPending)
+			pointsRecord.SetMemo(fmt.Sprintf("活动《双节同庆·福签传情》第%d次博饼：%s(%s)", history.Times(), selectedAward.Name(), reward.Name()))
+
+			// 保存订单记录
+			if err := controller.app.Save(pointsRecord); err != nil {
+				logger.Error("保存积分订单失败", slog.Any("err", err))
+			} else {
+				// 进行积分发放
+				memo := fmt.Sprintf("%s 交易单号：%s", pointsRecord.Memo(), pointsRecord.Id)
+				distributeErr := controller.fishpiService.Distribute(user.Name(), reward.Point(), memo)
+
+				if distributeErr != nil {
+					// 发放失败，更新订单状态
+					logger.Error("发放积分失败", slog.Any("err", distributeErr))
+					pointsRecord.SetStatus(model.PointStatusFailed)
+					pointsRecord.SetError(distributeErr.Error())
+					if err := controller.app.Save(pointsRecord); err != nil {
+						logger.Error("更新积分订单状态失败", slog.Any("err", err))
+					}
+				} else {
+					// 发放成功，更新订单状态
+					pointsRecord.SetStatus(model.PointStatusSuccess)
+					if err := controller.app.Save(pointsRecord); err != nil {
+						logger.Error("更新积分订单状态失败", slog.Any("err", err))
+					}
+				}
+			}
+		}
 	}
 
 	return event.JSON(http.StatusOK, map[string]any{
