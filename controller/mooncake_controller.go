@@ -203,8 +203,8 @@ func (controller *MooncakeController) Gambling(event *core.RequestEvent) error {
 			issuedCount = 0
 		}
 
-		// 特殊规则：level == 状元四点红（PrizeLevelZSiDianHong）仅当 isBest 为 true 时可获得
-		if result.PrizeLevel == mooncakeGambling.PrizeLevelZSiDianHong {
+		// 特殊规则：level >= 状元四点红（PrizeLevelZSiDianHong）仅当 isBest 为 true 时可获得
+		if result.PrizeLevel >= mooncakeGambling.PrizeLevelZSiDianHong {
 			if history.IsBest() && int(issuedCount) < reward.Amount() {
 				got = true
 			} else {
