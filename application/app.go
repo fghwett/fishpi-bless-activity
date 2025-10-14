@@ -83,6 +83,7 @@ func (application *Application) init(event *core.BootstrapEvent) error {
 
 	// 文章爬取服务
 	application.articleService = service.NewArticleService(event.App, application.fishPiService)
+	application.articleService.Start()
 	go application.articleService.FetchArticles()
 
 	// 注册路由

@@ -31,6 +31,10 @@ func NewArticleService(app core.App, fishpiService *fishpi.Service) *ArticleServ
 	return &service
 }
 
+func (service *ArticleService) Start() {
+	service.app.Cron().MustAdd("fetch-article", "*/5 * * * *", service.FetchArticles)
+}
+
 func (service *ArticleService) FetchArticles() {
 
 	service.cacheAuthors()
