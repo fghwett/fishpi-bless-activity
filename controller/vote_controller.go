@@ -106,6 +106,32 @@ func (controller *VoteController) CreateVote(event *core.RequestEvent) error {
 		return event.BadRequestError("您已经赠送过这种福签了", nil)
 	}
 
+	// --- 新增限制: 不能给同一个用户赠送多张福签（不同类型也不允许） ---
+	existingToVote := new(model.Vote)
+	err = controller.app.RecordQuery(model.DbNameVotes).
+		Where(dbx.HashExp{
+			model.VotesFieldFromUserId: user.Id,
+			model.VotesFieldToUserId:   article.UserId(),
+		}).
+		One(existingToVote)
+
+	if err == nil {
+		// 已经给该接收者赠送过福签
+		return event.BadRequestError("不能给同一用户赠送多张福签", nil)
+	}
+
+	// --- 新增限制: 每人最多赠送 3 张（类型互异） ---
+	userVotes := []*model.Vote{}
+	if err := controller.app.RecordQuery(model.DbNameVotes).
+		Where(dbx.HashExp{model.VotesFieldFromUserId: user.Id}).
+		All(&userVotes); err != nil {
+		logger.Warn("查询用户投票总数失败", slog.Any("err", err))
+	} else {
+		if len(userVotes) >= 3 {
+			return event.BadRequestError("您已达到赠送上限（3 张）", nil)
+		}
+	}
+
 	// 创建投票记录
 	votesCollection, err := controller.app.FindCollectionByNameOrId(model.DbNameVotes)
 	if err != nil {
