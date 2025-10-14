@@ -1933,6 +1933,7 @@
                             result: {
                                 dices: item.dices,
                                 awardName: item.award_name,
+                                rewardName: item.prize_name,
                                 prizeName: item.prize_name,
                                 prizeLevel: item.prize_level,
                                 gotReward: item.got_reward || false
@@ -2018,6 +2019,7 @@
                                     addHistory({
                                         dices: result.dices,
                                         awardName: result.award_name,
+                                        rewardName: result.reward_name,
                                         prizeName: result.prize_name,
                                         prizeLevel: result.prize_level,
                                         times_display: result.times_display || '',
@@ -2078,7 +2080,7 @@
                             <div class="history-time">${h.time} ${h.times_display ? (' · ' + h.times_display) : ''}</div>
                             <div><span class="history-badge ${h.result.gotReward ? 'got' : 'not-got'}">${h.result.gotReward ? '已获得' : '未获得'}</span></div>
                         </div>
-                        <div class="history-result">${h.result.awardName || ''} ${h.result.prizeName ? (' - ' + h.result.prizeName) : ''}</div>
+                        <div class="history-result">${h.result.awardName || ''} ${h.result.rewardName ? (' - ' + h.result.rewardName) : ''}</div>
                         <div class="history-dices" style="display: flex; align-items: center; gap: 3px;">
                             ${h.result.dices.map(d => `<img src="data:image/svg+xml;base64,${getDiceSVGBase64(d)}" alt="dice-${d}" class="dice-svg" />`).join('')}
                         </div>
