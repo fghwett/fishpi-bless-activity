@@ -5,6 +5,7 @@ import (
 	"bless-activity/service/fishpi"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/duke-git/lancet/v2/maputil"
@@ -89,6 +90,11 @@ func (service *ArticleService) cacheArticles() {
 }
 
 func (service *ArticleService) HandleArticle(responseArticle *fishpi.GetApiArticlesTagResponseArticle) {
+	if slices.Contains([]string{
+		"1760497353265",
+	}, responseArticle.OId) {
+		return
+	}
 	if err := service.HandleAuthor(responseArticle.ArticleAuthor); err != nil {
 		return
 	}
