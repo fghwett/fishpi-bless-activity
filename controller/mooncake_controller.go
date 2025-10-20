@@ -19,9 +19,10 @@ type MooncakeController struct {
 	logger        *slog.Logger
 	game          *mooncakeGambling.MooncakeGame
 	fishpiService *fishpi.Service
+	base          *BaseController
 }
 
-func NewMooncakeController(event *core.ServeEvent, fishpiService *fishpi.Service) *MooncakeController {
+func NewMooncakeController(event *core.ServeEvent, fishpiService *fishpi.Service, base *BaseController) *MooncakeController {
 	logger := event.App.Logger().With(
 		slog.String("controller", "mooncake"),
 	)
@@ -32,6 +33,7 @@ func NewMooncakeController(event *core.ServeEvent, fishpiService *fishpi.Service
 		logger:        logger,
 		game:          mooncakeGambling.NewMooncakeGame(),
 		fishpiService: fishpiService,
+		base:          base,
 	}
 
 	controller.registerRoutes()
@@ -41,7 +43,7 @@ func NewMooncakeController(event *core.ServeEvent, fishpiService *fishpi.Service
 
 func (controller *MooncakeController) registerRoutes() {
 	group := controller.event.Router.Group("/mooncake")
-	group.POST("/gambling", controller.Gambling).BindFunc(controller.CheckLogin)
+	group.POST("/gambling", controller.Gambling).BindFunc(controller.CheckLogin, controller.base.CheckActivity)
 	group.GET("/history", controller.GetHistory).BindFunc(controller.CheckLogin)
 }
 

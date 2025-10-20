@@ -12,11 +12,12 @@ import (
 type VoteController struct {
 	event *core.ServeEvent
 	app   core.App
+	base  *BaseController
 
 	logger *slog.Logger
 }
 
-func NewVoteController(event *core.ServeEvent) *VoteController {
+func NewVoteController(event *core.ServeEvent, base *BaseController) *VoteController {
 	logger := event.App.Logger().With(
 		slog.String("controller", "vote"),
 	)
@@ -24,6 +25,7 @@ func NewVoteController(event *core.ServeEvent) *VoteController {
 	controller := &VoteController{
 		event:  event,
 		app:    event.App,
+		base:   base,
 		logger: logger,
 	}
 
@@ -34,8 +36,8 @@ func NewVoteController(event *core.ServeEvent) *VoteController {
 
 func (controller *VoteController) registerRoutes() {
 	group := controller.event.Router.Group("/vote")
-	group.POST("", controller.CreateVote).BindFunc(controller.CheckLogin)
-	group.DELETE("/{id}", controller.DeleteVote).BindFunc(controller.CheckLogin)
+	group.POST("", controller.CreateVote).BindFunc(controller.CheckLogin, controller.base.CheckActivity)
+	group.DELETE("/{id}", controller.DeleteVote).BindFunc(controller.CheckLogin, controller.base.CheckActivity)
 	group.GET("/my", controller.GetMyVotes).BindFunc(controller.CheckLogin)
 	group.GET("/rank", controller.GetVoteRank)
 	group.GET("/statistics", controller.GetStatistics)
