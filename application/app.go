@@ -87,6 +87,11 @@ func (application *Application) init(event *core.BootstrapEvent) error {
 	//application.articleService.Start()
 	//go application.articleService.FetchArticles()
 
+	// 问题修复
+	if err = application.fixBug(event); err != nil {
+		return err
+	}
+
 	// 注册路由
 	application.app.OnServe().BindFunc(application.registerRoutes)
 
