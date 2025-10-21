@@ -13,8 +13,10 @@ var (
 	_ core.RecordProxy = (*User)(nil)
 	_ core.RecordProxy = (*Config)(nil)
 	_ core.RecordProxy = (*Article)(nil)
+	_ core.RecordProxy = (*Reward)(nil)
 	_ core.RecordProxy = (*Awards)(nil)
 	_ core.RecordProxy = (*Histories)(nil)
+	_ core.RecordProxy = (*Vote)(nil)
 	_ core.RecordProxy = (*Points)(nil)
 )
 
