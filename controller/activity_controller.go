@@ -47,61 +47,45 @@ func (controller *ActivityController) makeActionLogger(action string) *slog.Logg
 func (controller *ActivityController) GetActivityResult(event *core.RequestEvent) error {
 	logger := controller.makeActionLogger("get_activity_result")
 
-	// 1. 获取博饼状元信息（isBest=true的记录）
-	var champions []struct {
-		UserId   string `db:"userId" json:"user_id"`
-		Times    int    `db:"times" json:"times"`
-		Details  string `db:"details" json:"details"`
-		Created  string `db:"created" json:"created"`
-		Username string `db:"username" json:"username"`
-		Nickname string `db:"nickname" json:"nickname"`
-		Avatar   string `db:"avatar" json:"avatar"`
-		AwardId  string `db:"awardId" json:"award_id"`
+	// 1. 获取博饼信息（按奖励等级分组统计）
+	var gamingResults []struct {
+		RewardId    string `db:"rewardId" json:"reward_id"`
+		RewardName  string `db:"rewardName" json:"reward_name"`
+		RewardLevel int    `db:"rewardLevel" json:"reward_level"`
+		UserId      string `db:"userId" json:"user_id"`
+		Username    string `db:"username" json:"username"`
+		Nickname    string `db:"nickname" json:"nickname"`
+		Avatar      string `db:"avatar" json:"avatar"`
+		Count       int    `db:"count" json:"count"`
+		IsBest      bool   `db:"isBest" json:"is_best"`
+		Details     string `db:"details" json:"details"`
+		Created     string `db:"created" json:"created"`
+		Times       int    `db:"times" json:"times"`
 	}
 
 	err := controller.app.DB().
 		NewQuery(`
-			SELECT h.userId, h.times, h.details, h.created, h.awardId,
-			       u.name as username, u.nickname, u.avatar
+			SELECT h.rewardId, r.name as rewardName, r.level as rewardLevel,
+			       h.userId, u.name as username, u.nickname, u.avatar,
+			       COUNT(*) as count,
+			       MAX(h.isBest) as isBest,
+			       MAX(h.details) as details,
+			       MAX(h.created) as created,
+			       MAX(h.times) as times
 			FROM histories h
 			LEFT JOIN users u ON h.userId = u.id
-			WHERE h.isBest = true
-			ORDER BY h.created DESC
+			LEFT JOIN rewards r ON h.rewardId = r.id
+			GROUP BY h.rewardId, h.userId
+			ORDER BY r.level DESC, count DESC
 		`).
-		All(&champions)
+		All(&gamingResults)
 
 	if err != nil {
-		logger.Error("查询状元信息失败", slog.Any("err", err))
-		return event.InternalServerError("查询状元信息失败", err)
+		logger.Error("查询博饼信息失败", slog.Any("err", err))
+		return event.InternalServerError("查询博饼信息失败", err)
 	}
 
-	// 2. 获取博饼参与统计（非状元的参与人员和次数）
-	var participants []struct {
-		UserId   string `db:"userId" json:"user_id"`
-		Count    int    `db:"count" json:"count"`
-		Username string `db:"username" json:"username"`
-		Nickname string `db:"nickname" json:"nickname"`
-		Avatar   string `db:"avatar" json:"avatar"`
-	}
-
-	err = controller.app.DB().
-		NewQuery(`
-			SELECT h.userId, COUNT(*) as count,
-			       u.name as username, u.nickname, u.avatar
-			FROM histories h
-			LEFT JOIN users u ON h.userId = u.id
-			WHERE h.isTop = false
-			GROUP BY h.userId
-			ORDER BY count DESC
-		`).
-		All(&participants)
-
-	if err != nil {
-		logger.Error("查询参与者信息失败", slog.Any("err", err))
-		return event.InternalServerError("查询参与者信息失败", err)
-	}
-
-	// 3. 获取三种福签的获得信息
+	// 2. 获取三种福签的获得信息
 	var voteStats []struct {
 		ToUserId string `db:"toUserId" json:"to_user_id"`
 		VoteType string `db:"voteType" json:"vote_type"`
@@ -150,7 +134,7 @@ func (controller *ActivityController) GetActivityResult(event *core.RequestEvent
 		}
 	}
 
-	// 4. 获取文章排名信息
+	// 3. 获取文章排名信息
 	articles := []*model.Article{}
 	err = controller.app.RecordQuery(model.DbNameArticles).
 		OrderBy(model.ArticlesFieldScore + " DESC").
@@ -213,8 +197,7 @@ func (controller *ActivityController) GetActivityResult(event *core.RequestEvent
 
 	// 返回所有数据
 	return event.JSON(http.StatusOK, map[string]interface{}{
-		"champions":    champions,
-		"participants": participants,
+		"gaming_results": gamingResults,
 		"votes": map[string]interface{}{
 			"career":  careerVotes,
 			"romance": romanceVotes,

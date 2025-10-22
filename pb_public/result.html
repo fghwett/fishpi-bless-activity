@@ -99,13 +99,33 @@
             font-size: 28px;
         }
 
-        /* 状元展示 */
-        .champions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        /* 博饼信息 */
+        .reward-level-section {
+            margin-bottom: 30px;
         }
+        .reward-level-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .reward-level-header.level-1 {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        }
+        .reward-level-header.level-2 {
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+        }
+        .reward-level-header.level-3 {
+            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+        }
+
+        /* 状元展示 */
         .champion-card {
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
             border-radius: 12px;
@@ -113,6 +133,7 @@
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
             position: relative;
             overflow: hidden;
+            margin-bottom: 15px;
         }
         .champion-card::before {
             content: '👑';
@@ -156,29 +177,20 @@
             gap: 8px;
             justify-content: center;
             margin: 10px 0;
+            flex-wrap: wrap;
         }
-        .dice {
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: #FF0000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        .dice-svg {
+            width: 50px;
+            height: 50px;
         }
 
-        /* 参与者列表 */
-        .participants-grid {
+        /* 普通奖项展示 */
+        .reward-winners-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 15px;
-            margin-top: 20px;
         }
-        .participant-card {
+        .reward-winner-card {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 15px;
@@ -187,31 +199,31 @@
             gap: 15px;
             transition: all 0.3s ease;
         }
-        .participant-card:hover {
+        .reward-winner-card:hover {
             background: #e9ecef;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .participant-avatar {
+        .reward-avatar {
             width: 50px;
             height: 50px;
             border-radius: 50%;
             border: 2px solid #667eea;
         }
-        .participant-info {
+        .reward-user-info {
             flex: 1;
         }
-        .participant-info h4 {
+        .reward-user-info h4 {
             margin: 0 0 5px 0;
             font-size: 16px;
             color: #333;
         }
-        .participant-info p {
+        .reward-user-info p {
             margin: 0;
             font-size: 14px;
             color: #666;
         }
-        .participant-count {
+        .reward-count {
             font-size: 20px;
             font-weight: bold;
             color: #667eea;
@@ -411,8 +423,6 @@
         }
 
         @media (max-width: 768px) {
-            .champions-grid,
-            .participants-grid,
             .votes-container {
                 grid-template-columns: 1fr;
             }
@@ -438,24 +448,13 @@
         </div>
     </div>
 
-    <!-- 博饼状元 -->
-    <div class="section-card" id="championsSection">
-        <div class="section-title">
-            <span class="icon">👑</span>
-            <span>博饼状元榜</span>
-        </div>
-        <div class="champions-grid" id="championsGrid">
-            <div class="loading">加载中...</div>
-        </div>
-    </div>
-
-    <!-- 博饼参与统计 -->
-    <div class="section-card" id="participantsSection">
+    <!-- 博饼信息 -->
+    <div class="section-card" id="gamingSection">
         <div class="section-title">
             <span class="icon">🎲</span>
-            <span>博饼参与统计</span>
+            <span>博饼信息</span>
         </div>
-        <div class="participants-grid" id="participantsGrid">
+        <div id="gamingResultsContainer">
             <div class="loading">加载中...</div>
         </div>
     </div>
@@ -519,8 +518,7 @@
                 }
                 const data = await response.json();
 
-                renderChampions(data.champions || []);
-                renderParticipants(data.participants || []);
+                renderGamingResults(data.gaming_results || []);
                 renderVotes(data.votes || {});
                 renderArticles(data.article_rankings || []);
             } catch (error) {
@@ -529,65 +527,130 @@
             }
         }
 
-        // 渲染博饼状元
-        function renderChampions(champions) {
-            const grid = document.getElementById('championsGrid');
-            if (champions.length === 0) {
-                grid.innerHTML = '<div class="empty-state"><div class="icon">🎲</div><p>暂无状元数据</p></div>';
-                return;
-            }
+        // 生成骰子SVG
+        function createDiceSVG(value) {
+            const positions = {
+                1: [[50, 50]],
+                2: [[30, 30], [70, 70]],
+                3: [[30, 30], [50, 50], [70, 70]],
+                4: [[30, 30], [30, 70], [70, 30], [70, 70]],
+                5: [[30, 30], [30, 70], [50, 50], [70, 30], [70, 70]],
+                6: [[30, 30], [30, 50], [30, 70], [70, 30], [70, 50], [70, 70]]
+            };
 
-            grid.innerHTML = champions.map(champion => {
-                const details = JSON.parse(champion.details || '[]');
-                const diceHtml = details.map(d => `<div class="dice">${d}</div>`).join('');
+            const dots = positions[value] || [];
+            const dotsHtml = dots.map(([cx, cy]) =>
+                `<circle cx="${cx}" cy="${cy}" r="8" fill="#DC143C"/>`
+            ).join('');
 
-                return `
-                    <div class="champion-card">
-                        <div class="champion-user">
-                            <img src="${champion.avatar || '/api/files/_pb_users_auth_/' + champion.user_id + '/' + champion.avatar}"
-                                 alt="${champion.nickname}" class="champion-avatar"
-                                 onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${champion.user_id}'">
-                            <div class="champion-info">
-                                <h3>${champion.nickname || champion.username}</h3>
-                                <p>@${champion.username}</p>
-                            </div>
-                        </div>
-                        <div class="champion-details">
-                            <div style="text-align: center; margin-bottom: 8px; font-weight: bold; color: #8B4513;">
-                                第 ${champion.times} 次博饼
-                            </div>
-                            <div class="dice-display">
-                                ${diceHtml}
-                            </div>
-                            <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #999;">
-                                ${new Date(champion.created).toLocaleString('zh-CN')}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            return `
+                <svg class="dice-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="90" height="90" rx="12" fill="white" stroke="#333" stroke-width="2"/>
+                    ${dotsHtml}
+                </svg>
+            `;
         }
 
-        // 渲染参与者统计
-        function renderParticipants(participants) {
-            const grid = document.getElementById('participantsGrid');
-            if (participants.length === 0) {
-                grid.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无参与数据</p></div>';
+        // 渲染博饼信息
+        function renderGamingResults(results) {
+            const container = document.getElementById('gamingResultsContainer');
+            if (results.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🎲</div><p>暂无博饼数据</p></div>';
                 return;
             }
 
-            grid.innerHTML = participants.map(p => `
-                <div class="participant-card">
-                    <img src="${p.avatar || '/api/files/_pb_users_auth_/' + p.user_id + '/' + p.avatar}"
-                         alt="${p.nickname}" class="participant-avatar"
-                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${p.user_id}'">
-                    <div class="participant-info">
-                        <h4>${p.nickname || p.username}</h4>
-                        <p>@${p.username}</p>
-                    </div>
-                    <div class="participant-count">${p.count}次</div>
-                </div>
-            `).join('');
+            // 按奖励等级分组，同时区分最终状元和普通获奖
+            const groupedByLevel = {};
+            results.forEach(result => {
+                const level = result.reward_level;
+                if (!groupedByLevel[level]) {
+                    groupedByLevel[level] = {
+                        name: result.reward_name,
+                        champions: [], // isBest=true的最终状元
+                        winners: []    // 其他获奖者
+                    };
+                }
+
+                if (result.is_best) {
+                    groupedByLevel[level].champions.push(result);
+                } else {
+                    groupedByLevel[level].winners.push(result);
+                }
+            });
+
+            // 按等级降序排序
+            const sortedLevels = Object.keys(groupedByLevel).sort((a, b) => b - a);
+
+            let html = '';
+            sortedLevels.forEach(level => {
+                const levelData = groupedByLevel[level];
+                const levelClass = level >= 6 ? 'level-1' : level >= 4 ? 'level-2' : level >= 2 ? 'level-3' : '';
+                const isChampionLevel = parseInt(level) >= 6; // 等级6及以上为状元等级
+
+                html += `
+                    <div class="reward-level-section">
+                        <div class="reward-level-header ${levelClass}">
+                            ${isChampionLevel ? '👑' : '🎁'} ${levelData.name}
+                        </div>
+                `;
+
+                // 渲染最终状元（isBest=true）- 显示骰子
+                if (levelData.champions.length > 0) {
+                    levelData.champions.forEach(champion => {
+                        const details = JSON.parse(champion.details || '[]');
+                        const diceHtml = details.map(d => createDiceSVG(d)).join('');
+
+                        html += `
+                            <div class="champion-card">
+                                <div class="champion-user">
+                                    <img src="${champion.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + champion.user_id}"
+                                         alt="${champion.nickname}" class="champion-avatar"
+                                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${champion.user_id}'">
+                                    <div class="champion-info">
+                                        <h3>${champion.nickname || champion.username}</h3>
+                                        <p>@${champion.username}</p>
+                                    </div>
+                                </div>
+                                <div class="champion-details">
+                                    <div style="text-align: center; margin-bottom: 8px; font-weight: bold; color: #8B4513;">
+                                        ${isChampionLevel ? '🏆 最终状元' : '🎯 最终获奖'} · 共获得 ${champion.count} 次 · 第 ${champion.times} 次博饼
+                                    </div>
+                                    <div class="dice-display">
+                                        ${diceHtml}
+                                    </div>
+                                    <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #999;">
+                                        ${new Date(champion.created).toLocaleString('zh-CN')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 渲染其他获奖者（显示人和次数）
+                if (levelData.winners.length > 0) {
+                    html += '<div class="reward-winners-grid">';
+                    levelData.winners.forEach(winner => {
+                        html += `
+                            <div class="reward-winner-card">
+                                <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
+                                     alt="${winner.nickname}" class="reward-avatar"
+                                     onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                <div class="reward-user-info">
+                                    <h4>${winner.nickname || winner.username}</h4>
+                                    <p>@${winner.username}</p>
+                                </div>
+                                <div class="reward-count">${winner.count}次</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
         }
 
         // 渲染福签统计
