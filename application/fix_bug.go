@@ -17,6 +17,7 @@ func (application *Application) fixBug(e *core.BootstrapEvent) error {
 		application.fixExample,
 		//application.rewardReissue,
 		//application.retryFailedPoints,
+		//application.articleScoreAndReward,
 	}
 
 	for _, handler := range list {
@@ -317,6 +318,182 @@ func (application *Application) retryFailedPoints(event *core.BootstrapEvent) er
 
 	logger.Info("失败积分订单重新发放完成",
 		slog.Int("total", len(failedPoints)),
+		slog.Int("success", successCount),
+		slog.Int("failed", failCount))
+
+	return nil
+}
+
+// 文章评分和奖励发放
+func (application *Application) articleScoreAndReward(event *core.BootstrapEvent) error {
+	logger := event.App.Logger().With("fix", "articleScoreAndReward")
+
+	// 1. 获取所有文章
+	var articles []*model.Article
+	if err := event.App.RecordQuery(model.DbNameArticles).Where(dbx.Not(dbx.HashExp{model.CommonFieldId: "4tmbyzsuhbd66yr"})).All(&articles); err != nil {
+		logger.Error("查询文章失败", slog.Any("err", err))
+		return err
+	}
+
+	logger.Info("开始计算文章评分", slog.Int("total", len(articles)))
+
+	// 2. 计算并更新每篇文章的评分
+	type ArticleScore struct {
+		Article *model.Article
+		Score   float64
+	}
+
+	articleScores := make([]ArticleScore, 0, len(articles))
+
+	for _, article := range articles {
+		score := article.CalculateScore()
+		article.SetScore(score)
+
+		if err := event.App.Save(article); err != nil {
+			logger.Error("更新文章评分失败",
+				slog.String("article_id", article.Id),
+				slog.String("title", article.Title()),
+				slog.Any("err", err))
+			continue
+		}
+
+		articleScores = append(articleScores, ArticleScore{
+			Article: article,
+			Score:   score,
+		})
+
+		logger.Debug("文章评分计算完成",
+			slog.String("title", article.Title()),
+			slog.Float64("score", score),
+			slog.Int("viewCount", article.ViewCount()),
+			slog.Int("goodCnt", article.GoodCnt()),
+			slog.Int("collectCnt", article.CollectCnt()),
+			slog.Int("commentCount", article.CommentCount()),
+			slog.Int("thankCnt", article.ThankCnt()))
+	}
+
+	// 3. 按评分排序（从高到低）
+	for i := 0; i < len(articleScores); i++ {
+		for j := i + 1; j < len(articleScores); j++ {
+			if articleScores[j].Score > articleScores[i].Score {
+				articleScores[i], articleScores[j] = articleScores[j], articleScores[i]
+			}
+		}
+	}
+
+	logger.Info("文章评分排序完成", slog.Int("count", len(articleScores)))
+
+	// 4. 预加载用户缓存
+	userCache := make(map[string]*model.User)
+	var allUsers []*model.User
+	if err := event.App.RecordQuery(model.DbNameUsers).All(&allUsers); err != nil {
+		logger.Error("预加载用户数据失败", slog.Any("err", err))
+		return err
+	}
+	for _, u := range allUsers {
+		userCache[u.Id] = u
+	}
+
+	// 5. 获取 points collection
+	pointsCollection, err := event.App.FindCollectionByNameOrId(model.DbNamePoints)
+	if err != nil {
+		logger.Error("查找points集合失败", slog.Any("err", err))
+		return err
+	}
+
+	// 6. 根据排名发放积分
+	successCount := 0
+	failCount := 0
+
+	for rank, as := range articleScores {
+		ranking := rank + 1
+		var points int
+		var rankName string
+
+		// 根据排名确定积分
+		if ranking == 1 {
+			points = 1024
+			rankName = "第一名"
+		} else if ranking >= 2 && ranking <= 3 {
+			points = 512
+			rankName = fmt.Sprintf("第%d名", ranking)
+		} else if ranking >= 4 && ranking <= 10 {
+			points = 256
+			rankName = fmt.Sprintf("第%d名", ranking)
+		} else {
+			points = 128
+			rankName = "参与奖"
+		}
+
+		// 获取文章作者
+		user, exists := userCache[as.Article.UserId()]
+		if !exists {
+			logger.Warn("文章作者不存在，跳过",
+				slog.String("article_id", as.Article.Id),
+				slog.String("user_id", as.Article.UserId()))
+			failCount++
+			continue
+		}
+
+		// 创建积分订单
+		pointsRecord := model.NewPointsFromCollection(pointsCollection)
+		pointsRecord.SetUserId(user.Id)
+		pointsRecord.SetPoint(points)
+		pointsRecord.SetStatus(model.PointStatusPending)
+		pointsRecord.SetMemo(fmt.Sprintf("活动《双节同庆·福签传情》文章评分奖励：%s（评分：%.2f）",
+			rankName, as.Score))
+
+		if err := event.App.Save(pointsRecord); err != nil {
+			logger.Error("保存积分订单失败",
+				slog.String("user", user.Name()),
+				slog.Any("err", err))
+			failCount++
+			continue
+		}
+
+		// 发放积分
+		memo := fmt.Sprintf("%s 交易单号：%s", pointsRecord.Memo(), pointsRecord.Id)
+		var distributeErr error
+		if !event.App.IsDev() {
+			distributeErr = application.fishPiService.Distribute(user.Name(), points, memo)
+		}
+
+		if distributeErr != nil {
+			logger.Error("发放积分失败",
+				slog.String("user", user.Name()),
+				slog.Int("point", points),
+				slog.Any("err", distributeErr))
+			pointsRecord.SetStatus(model.PointStatusFailed)
+			pointsRecord.SetError(distributeErr.Error())
+			failCount++
+		} else {
+			pointsRecord.SetStatus(model.PointStatusSuccess)
+			successCount++
+			logger.Info("发放积分成功",
+				slog.Int("ranking", ranking),
+				slog.String("user", user.Name()),
+				slog.String("article", as.Article.Title()),
+				slog.Float64("score", as.Score),
+				slog.Int("point", points))
+		}
+
+		if err := event.App.Save(pointsRecord); err != nil {
+			logger.Error("更新积分订单状态失败", slog.Any("err", err))
+		}
+
+		// 延迟，避免请求过快
+		if ranking%10 == 0 {
+			logger.Info("已处理10条记录，等待1秒",
+				slog.Int("processed", ranking),
+				slog.Int("total", len(articleScores)))
+			time.Sleep(1 * time.Second)
+		} else {
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+
+	logger.Info("文章评分奖励发放完成",
+		slog.Int("total", len(articleScores)),
 		slog.Int("success", successCount),
 		slog.Int("failed", failCount))
 

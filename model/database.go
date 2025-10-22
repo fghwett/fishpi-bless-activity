@@ -1,6 +1,8 @@
 package model
 
 import (
+	"math"
+
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
@@ -136,6 +138,7 @@ const (
 	ArticlesFieldCommentCount   = "commentCount"
 	ArticlesFieldCollectCnt     = "collectCnt"
 	ArticlesFieldThankCnt       = "thankCnt"
+	ArticlesFieldScore          = "score"
 	ArticlesFieldCreatedAt      = "createdAt"
 	ArticlesFieldUpdatedAt      = "updatedAt"
 	ArticlesFieldCreated        = "created"
@@ -229,6 +232,14 @@ func (article *Article) SetThankCnt(value int) {
 	article.Set(ArticlesFieldThankCnt, value)
 }
 
+func (article *Article) Score() float64 {
+	return article.GetFloat(ArticlesFieldScore)
+}
+
+func (article *Article) SetScore(value float64) {
+	article.Set(ArticlesFieldScore, value)
+}
+
 func (article *Article) CreatedAt() types.DateTime {
 	return article.GetDateTime(ArticlesFieldCreatedAt)
 }
@@ -251,6 +262,54 @@ func (article *Article) Created() types.DateTime {
 
 func (article *Article) Updated() types.DateTime {
 	return article.GetDateTime(ArticlesFieldUpdated)
+}
+
+// CalculateScore 计算文章评分
+// 综合评分算法：
+// 综合评分 = (基础互动分 × 质量系数) + 价值加权分
+//
+// 基础互动分 = log(浏览量 + 1) × 0.2 + log(点赞数 + 1) × 0.3 + log(收藏数 + 1) × 0.5
+// 价值加权分 = log(感谢数 + 1) × 5 + log(评论数 + 1) × 3
+// 质量系数 = 1.0 + min(1.0, 收藏率×0.5 + 评论率×0.3 + 感谢率×0.2)
+//
+// 其中：
+// - 收藏率 = 收藏数 / (点赞数 + 1)，反映内容的保存价值
+// - 评论率 = 评论数 / (浏览量/100 + 1)，反映讨论热度
+// - 感谢率 = 感谢数 / (浏览量/100 + 1)，反映内容价值
+func (article *Article) CalculateScore() float64 {
+	// 基础数据
+	viewCount := float64(article.ViewCount())
+	goodCnt := float64(article.GoodCnt())
+	collectCnt := float64(article.CollectCnt())
+	commentCount := float64(article.CommentCount())
+	thankCnt := float64(article.ThankCnt())
+
+	// 1. 基础互动分（使用对数函数，避免大数值主导）
+	baseScore := math.Log(viewCount+1)*0.2 +
+		math.Log(goodCnt+1)*0.3 +
+		math.Log(collectCnt+1)*0.5
+
+	// 2. 价值加权分（高价值互动，使用对数避免线性爆炸）
+	valueScore := math.Log(thankCnt+1)*5 + math.Log(commentCount+1)*3
+
+	// 3. 质量系数（反映内容质量，范围 1.0 ~ 2.0）
+	// 收藏率：收藏数相对于点赞数的比例，反映深度价值
+	collectRate := collectCnt / (goodCnt + 1)
+
+	// 评论率：评论数相对于浏览量的比例（浏览量/100标准化）
+	commentRate := commentCount / (viewCount/100 + 1)
+
+	// 感谢率：感谢数相对于浏览量的比例（浏览量/100标准化）
+	thankRate := thankCnt / (viewCount/100 + 1)
+
+	// 质量系数 = 1.0 + 额外加成（最高1.0）
+	qualityBonus := math.Min(1.0, collectRate*0.5+commentRate*0.3+thankRate*0.2)
+	qualityFactor := 1.0 + qualityBonus
+
+	// 4. 综合评分
+	finalScore := (baseScore * qualityFactor) + valueScore
+
+	return finalScore
 }
 
 const (
