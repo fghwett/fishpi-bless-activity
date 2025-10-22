@@ -547,6 +547,23 @@
             color: #FFB900;
         }
 
+        /* 用户链接样式 */
+        .user-link {
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+        }
+        .user-link:hover {
+            opacity: 0.8;
+        }
+        .user-link.avatar-link:hover {
+            transform: scale(1.05);
+        }
+        .user-link.name-link:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
         /* 空状态 */
         .empty-state {
             text-align: center;
@@ -686,6 +703,11 @@
 
     <script src="https://unpkg.com/layui@2.8.18/dist/layui.js"></script>
     <script>
+        // 生成用户主页链接
+        function getUserProfileUrl(username) {
+            return `https://fishpi.cn/member/${username}`;
+        }
+
         // 加载活动结果数据
         async function loadActivityResult() {
             try {
@@ -783,12 +805,22 @@
                         html += `
                             <div class="champion-card">
                                 <div class="champion-user">
-                                    <img src="${champion.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + champion.user_id}"
-                                         alt="${champion.nickname}" class="champion-avatar"
-                                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${champion.user_id}'">
+                                    <a href="${getUserProfileUrl(champion.username)}" target="_blank" class="user-link avatar-link">
+                                        <img src="${champion.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + champion.user_id}"
+                                             alt="${champion.nickname}" class="champion-avatar"
+                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${champion.user_id}'">
+                                    </a>
                                     <div class="champion-info">
-                                        <h3>${champion.nickname || champion.username}</h3>
-                                        <p>@${champion.username}</p>
+                                        <h3>
+                                            <a href="${getUserProfileUrl(champion.username)}" target="_blank" class="user-link name-link">
+                                                ${champion.nickname || champion.username}
+                                            </a>
+                                        </h3>
+                                        <p>
+                                            <a href="${getUserProfileUrl(champion.username)}" target="_blank" class="user-link name-link">
+                                                @${champion.username}
+                                            </a>
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="champion-details">
@@ -819,12 +851,22 @@
                             html += `
                                 <div class="champion-card" style="background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);">
                                     <div class="champion-user">
-                                        <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
-                                             alt="${winner.nickname}" class="champion-avatar"
-                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                        <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link avatar-link">
+                                            <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
+                                                 alt="${winner.nickname}" class="champion-avatar"
+                                                 onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                        </a>
                                         <div class="champion-info">
-                                            <h3>${winner.nickname || winner.username}</h3>
-                                            <p>@${winner.username}</p>
+                                            <h3>
+                                                <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link name-link">
+                                                    ${winner.nickname || winner.username}
+                                                </a>
+                                            </h3>
+                                            <p>
+                                                <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link name-link">
+                                                    @${winner.username}
+                                                </a>
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="champion-details">
@@ -847,12 +889,22 @@
                         levelData.winners.forEach(winner => {
                             html += `
                                 <div class="reward-winner-card">
-                                    <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
-                                         alt="${winner.nickname}" class="reward-avatar"
-                                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                    <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link avatar-link">
+                                        <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
+                                             alt="${winner.nickname}" class="reward-avatar"
+                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                    </a>
                                     <div class="reward-user-info">
-                                        <h4>${winner.nickname || winner.username}</h4>
-                                        <p>@${winner.username}</p>
+                                        <h4>
+                                            <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link name-link">
+                                                ${winner.nickname || winner.username}
+                                            </a>
+                                        </h4>
+                                        <p>
+                                            <a href="${getUserProfileUrl(winner.username)}" target="_blank" class="user-link name-link">
+                                                @${winner.username}
+                                            </a>
+                                        </p>
                                     </div>
                                     <div class="reward-count">${winner.count}次</div>
                                 </div>
@@ -926,11 +978,17 @@
                                 }) : '';
                                 return `
                                     <div class="voter-card">
-                                        <img src="${voter.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + voter.user_id}"
-                                             alt="${voter.nickname}" class="voter-avatar"
-                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${voter.user_id}'">
+                                        <a href="${getUserProfileUrl(voter.username)}" target="_blank" class="user-link avatar-link">
+                                            <img src="${voter.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + voter.user_id}"
+                                                 alt="${voter.nickname}" class="voter-avatar"
+                                                 onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${voter.user_id}'">
+                                        </a>
                                         <div class="voter-info">
-                                            <p class="voter-name">${voter.nickname || voter.username}</p>
+                                            <p class="voter-name">
+                                                <a href="${getUserProfileUrl(voter.username)}" target="_blank" class="user-link name-link">
+                                                    ${voter.nickname || voter.username}
+                                                </a>
+                                            </p>
                                             ${voteTime ? `<p class="voter-time">${voteTime}</p>` : ''}
                                         </div>
                                     </div>
@@ -944,12 +1002,22 @@
                     <div class="vote-recipient-card">
                         <div class="vote-recipient-header">
                             <div class="vote-recipient-rank ${rankClass}">${rankEmoji}</div>
-                            <img src="${recipient.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + recipient.user_id}"
-                                 alt="${recipient.nickname}" class="vote-recipient-avatar"
-                                 onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${recipient.user_id}'">
+                            <a href="${getUserProfileUrl(recipient.username)}" target="_blank" class="user-link avatar-link">
+                                <img src="${recipient.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + recipient.user_id}"
+                                     alt="${recipient.nickname}" class="vote-recipient-avatar"
+                                     onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${recipient.user_id}'">
+                            </a>
                             <div class="vote-recipient-info">
-                                <h3 class="vote-recipient-name">${recipient.nickname || recipient.username}</h3>
-                                <p class="vote-recipient-username">@${recipient.username}</p>
+                                <h3 class="vote-recipient-name">
+                                    <a href="${getUserProfileUrl(recipient.username)}" target="_blank" class="user-link name-link">
+                                        ${recipient.nickname || recipient.username}
+                                    </a>
+                                </h3>
+                                <p class="vote-recipient-username">
+                                    <a href="${getUserProfileUrl(recipient.username)}" target="_blank" class="user-link name-link">
+                                        @${recipient.username}
+                                    </a>
+                                </p>
                             </div>
                             <div class="vote-recipient-stats">
                                 <div class="vote-recipient-count">${recipient.count}</div>
@@ -997,11 +1065,15 @@
                             <div class="article-content">
                                 <div class="article-title">${article.title}</div>
                                 <div class="article-preview">${article.preview_content}</div>
-                                <div class="article-author">
-                                    <img src="${article.avatar || '/api/files/_pb_users_auth_/' + article.user_id + '/' + article.avatar}"
-                                         alt="${article.nickname}" class="article-avatar"
-                                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${article.user_id}'">
-                                    <span>${article.nickname || article.username}</span>
+                                <div class="article-author" onclick="event.stopPropagation();">
+                                    <a href="${getUserProfileUrl(article.username)}" target="_blank" class="user-link avatar-link">
+                                        <img src="${article.avatar || '/api/files/_pb_users_auth_/' + article.user_id + '/' + article.avatar}"
+                                             alt="${article.nickname}" class="article-avatar"
+                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${article.user_id}'">
+                                    </a>
+                                    <a href="${getUserProfileUrl(article.username)}" target="_blank" class="user-link name-link">
+                                        ${article.nickname || article.username}
+                                    </a>
                                 </div>
                                 <div class="article-stats">
                                     <span class="stat-item"><span class="icon">👁️</span> ${article.view_count}</span>
