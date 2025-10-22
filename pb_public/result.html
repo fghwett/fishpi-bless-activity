@@ -538,9 +538,12 @@
                 6: [[30, 30], [30, 50], [30, 70], [70, 30], [70, 50], [70, 70]]
             };
 
+            // 只有1和4是红色，其他都是黑色
+            const dotColor = (value === 1 || value === 4) ? '#DC143C' : '#000000';
+
             const dots = positions[value] || [];
             const dotsHtml = dots.map(([cx, cy]) =>
-                `<circle cx="${cx}" cy="${cy}" r="8" fill="#DC143C"/>`
+                `<circle cx="${cx}" cy="${cy}" r="8" fill="${dotColor}"/>`
             ).join('');
 
             return `
@@ -627,24 +630,59 @@
                     });
                 }
 
-                // 渲染其他获奖者（显示人和次数）
+                // 渲染其他获奖者
                 if (levelData.winners.length > 0) {
-                    html += '<div class="reward-winners-grid">';
-                    levelData.winners.forEach(winner => {
-                        html += `
-                            <div class="reward-winner-card">
-                                <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
-                                     alt="${winner.nickname}" class="reward-avatar"
-                                     onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
-                                <div class="reward-user-info">
-                                    <h4>${winner.nickname || winner.username}</h4>
-                                    <p>@${winner.username}</p>
+                    // 状元等级（level >= 6）显示骰子，其他等级显示人和次数
+                    if (isChampionLevel) {
+                        // 失败的状元也显示骰子
+                        levelData.winners.forEach(winner => {
+                            const details = JSON.parse(winner.details || '[]');
+                            const diceHtml = details.map(d => createDiceSVG(d)).join('');
+
+                            html += `
+                                <div class="champion-card" style="background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);">
+                                    <div class="champion-user">
+                                        <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
+                                             alt="${winner.nickname}" class="champion-avatar"
+                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                        <div class="champion-info">
+                                            <h3>${winner.nickname || winner.username}</h3>
+                                            <p>@${winner.username}</p>
+                                        </div>
+                                    </div>
+                                    <div class="champion-details">
+                                        <div style="text-align: center; margin-bottom: 8px; font-weight: bold; color: #8B4513;">
+                                            共获得 ${winner.count} 次 · 第 ${winner.times} 次博饼
+                                        </div>
+                                        <div class="dice-display">
+                                            ${diceHtml}
+                                        </div>
+                                        <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #999;">
+                                            ${new Date(winner.created).toLocaleString('zh-CN')}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="reward-count">${winner.count}次</div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
+                            `;
+                        });
+                    } else {
+                        // 其他等级显示简洁的列表
+                        html += '<div class="reward-winners-grid">';
+                        levelData.winners.forEach(winner => {
+                            html += `
+                                <div class="reward-winner-card">
+                                    <img src="${winner.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + winner.user_id}"
+                                         alt="${winner.nickname}" class="reward-avatar"
+                                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${winner.user_id}'">
+                                    <div class="reward-user-info">
+                                        <h4>${winner.nickname || winner.username}</h4>
+                                        <p>@${winner.username}</p>
+                                    </div>
+                                    <div class="reward-count">${winner.count}次</div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
                 }
 
                 html += '</div>';
