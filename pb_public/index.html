@@ -50,6 +50,53 @@
             color: white;
         }
 
+        /* 活动结束提示 */
+        .activity-ended-notice {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        .activity-ended-notice h2 {
+            font-size: 24px;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+        .activity-ended-notice p {
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            opacity: 0.95;
+        }
+        .result-page-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: white;
+            color: #ff6b6b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .result-page-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            background: #fff3f3;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
         /* 活动信息样式 */
         .activity-info {
             background: white;
@@ -1153,11 +1200,19 @@
         <div class="nav-header">
             <div class="nav-logo">🎊 福签传情活动</div>
             <nav class="nav-menu">
+                <a href="/result.html" class="nav-item" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white;">📊 活动结果</a>
                 <a href="#activity-info" class="nav-item">📢 活动信息</a>
                 <a href="#article-list" class="nav-item">📝 文章列表</a>
                 <a href="#mooncake-game" class="nav-item">🎲 博饼抽奖</a>
                 <a href="#vote-section" class="nav-item">🎁 投票福签</a>
             </nav>
+        </div>
+
+        <!-- 活动结束提示 -->
+        <div class="activity-ended-notice">
+            <h2>📢 活动已结束</h2>
+            <p>本次活动已于 <strong>2025年10月19日 24:00</strong> 圆满结束，感谢各位的热情参与！</p>
+            <a href="/result.html" class="result-page-btn">🎯 查看活动结果</a>
         </div>
 
         <!-- 活动信息展示部分 -->
