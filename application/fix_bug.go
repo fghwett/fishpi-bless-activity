@@ -4,6 +4,7 @@ import (
 	"bless-activity/model"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -14,7 +15,8 @@ type fixBugHandler func(e *core.BootstrapEvent) error
 func (application *Application) fixBug(e *core.BootstrapEvent) error {
 	list := []fixBugHandler{
 		application.fixExample,
-		application.rewardReissue,
+		//application.rewardReissue,
+		application.retryFailedPoints,
 	}
 
 	for _, handler := range list {
@@ -218,5 +220,105 @@ func (application *Application) rewardReissue(event *core.BootstrapEvent) error 
 		slog.Int("total", len(histories)),
 		slog.Int("success", successCount),
 		slog.Int("skip", skipCount))
+	return nil
+}
+
+// 重新发放失败的积分订单
+func (application *Application) retryFailedPoints(event *core.BootstrapEvent) error {
+	logger := event.App.Logger().With("fix", "retryFailedPoints")
+
+	// 预加载所有用户数据到缓存
+	userCache := make(map[string]*model.User)
+	var allUsers []*model.User
+	if err := event.App.RecordQuery(model.DbNameUsers).All(&allUsers); err != nil {
+		logger.Error("预加载用户数据失败", slog.Any("err", err))
+		return err
+	}
+	for _, u := range allUsers {
+		userCache[u.Id] = u
+	}
+
+	// 查找所有失败的积分订单
+	var failedPoints []*model.Points
+	if err := event.App.RecordQuery(model.DbNamePoints).
+		Where(dbx.HashExp{model.PointsFieldStatus: model.PointStatusFailed}).
+		OrderBy(model.PointsFieldCreated + " asc").
+		All(&failedPoints); err != nil {
+		logger.Error("查找失败的积分订单失败", slog.Any("err", err))
+		return err
+	}
+
+	logger.Info("开始重新发放失败的积分订单", slog.Int("count", len(failedPoints)))
+
+	successCount := 0
+	failCount := 0
+
+	for i, pointsRecord := range failedPoints {
+		// 从缓存获取用户信息
+		user, exists := userCache[pointsRecord.UserId()]
+		if !exists {
+			logger.Warn("用户不存在，跳过",
+				slog.String("user_id", pointsRecord.UserId()),
+				slog.String("points_id", pointsRecord.Id))
+			failCount++
+			continue
+		}
+
+		// 更新订单状态为待发放
+		pointsRecord.SetStatus(model.PointStatusPending)
+		pointsRecord.SetError("") // 清空之前的错误信息
+
+		// 重新尝试发放积分
+		memo := fmt.Sprintf("%s 交易单号：%s", pointsRecord.Memo(), pointsRecord.Id)
+		var distributeErr error
+		if !event.App.IsDev() {
+			distributeErr = application.fishPiService.Distribute(user.Name(), pointsRecord.Point(), memo)
+		}
+
+		if distributeErr != nil {
+			// 发放失败
+			logger.Error("重新发放积分失败",
+				slog.String("user", user.Name()),
+				slog.Int("point", pointsRecord.Point()),
+				slog.String("points_id", pointsRecord.Id),
+				slog.Any("err", distributeErr))
+			pointsRecord.SetStatus(model.PointStatusFailed)
+			pointsRecord.SetError(distributeErr.Error())
+			failCount++
+		} else {
+			// 发放成功
+			pointsRecord.SetStatus(model.PointStatusSuccess)
+			successCount++
+			logger.Info("重新发放积分成功",
+				slog.String("user", user.Name()),
+				slog.Int("point", pointsRecord.Point()),
+				slog.String("points_id", pointsRecord.Id))
+		}
+
+		// 保存订单状态
+		if err := event.App.Save(pointsRecord); err != nil {
+			logger.Error("更新积分订单状态失败",
+				slog.String("points_id", pointsRecord.Id),
+				slog.Any("err", err))
+		}
+
+		// 每处理一条记录后延迟一段时间，避免请求过快
+		// 每10条延迟1秒，避免API限流
+		if (i+1)%10 == 0 {
+			logger.Info("已处理10条记录，等待1秒",
+				slog.Int("processed", i+1),
+				slog.Int("total", len(failedPoints)))
+			time.Sleep(1 * time.Second)
+		} else {
+			// 其他情况延迟100ms
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+
+	logger.Info("失败积分订单重新发放完成",
+		slog.Int("total", len(failedPoints)),
+		slog.Int("success", successCount),
+		slog.Int("failed", failCount))
+
 	return nil
 }
