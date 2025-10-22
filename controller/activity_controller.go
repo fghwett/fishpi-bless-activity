@@ -85,53 +85,102 @@ func (controller *ActivityController) GetActivityResult(event *core.RequestEvent
 		return event.InternalServerError("查询博饼信息失败", err)
 	}
 
-	// 2. 获取三种福签的获得信息
-	var voteStats []struct {
-		ToUserId string `db:"toUserId" json:"to_user_id"`
-		VoteType string `db:"voteType" json:"vote_type"`
-		Count    int    `db:"count" json:"count"`
-		Username string `db:"username" json:"username"`
-		Nickname string `db:"nickname" json:"nickname"`
-		Avatar   string `db:"avatar" json:"avatar"`
+	// 2. 获取三种福签的获得信息（包含投票者信息）
+	var voteDetails []struct {
+		ToUserId     string `db:"toUserId" json:"to_user_id"`
+		ToUsername   string `db:"toUsername" json:"to_username"`
+		ToNickname   string `db:"toNickname" json:"to_nickname"`
+		ToAvatar     string `db:"toAvatar" json:"to_avatar"`
+		FromUserId   string `db:"fromUserId" json:"from_user_id"`
+		FromUsername string `db:"fromUsername" json:"from_username"`
+		FromNickname string `db:"fromNickname" json:"from_nickname"`
+		FromAvatar   string `db:"fromAvatar" json:"from_avatar"`
+		VoteType     string `db:"voteType" json:"vote_type"`
+		ArticleId    string `db:"articleId" json:"article_id"`
+		Created      string `db:"created" json:"created"`
 	}
 
 	err = controller.app.DB().
 		NewQuery(`
-			SELECT v.toUserId, v.voteType, COUNT(*) as count,
-			       u.name as username, u.nickname, u.avatar
+			SELECT v.toUserId, v.fromUserId, v.voteType, v.articleId, v.created,
+			       toUser.name as toUsername, toUser.nickname as toNickname, toUser.avatar as toAvatar,
+			       fromUser.name as fromUsername, fromUser.nickname as fromNickname, fromUser.avatar as fromAvatar
 			FROM votes v
-			LEFT JOIN users u ON v.toUserId = u.id
-			GROUP BY v.toUserId, v.voteType
-			ORDER BY v.voteType, count DESC
+			LEFT JOIN users toUser ON v.toUserId = toUser.id
+			LEFT JOIN users fromUser ON v.fromUserId = fromUser.id
+			ORDER BY v.voteType, v.created DESC
 		`).
-		All(&voteStats)
+		All(&voteDetails)
 
 	if err != nil {
 		logger.Error("查询福签信息失败", slog.Any("err", err))
 		return event.InternalServerError("查询福签信息失败", err)
 	}
 
-	// 按福签类型分组
-	careerVotes := []map[string]interface{}{}
-	romanceVotes := []map[string]interface{}{}
-	wealthVotes := []map[string]interface{}{}
+	// 按福签类型和接收者分组
+	type VoteRecipient struct {
+		UserId   string                   `json:"user_id"`
+		Username string                   `json:"username"`
+		Nickname string                   `json:"nickname"`
+		Avatar   string                   `json:"avatar"`
+		Count    int                      `json:"count"`
+		Voters   []map[string]interface{} `json:"voters"`
+	}
 
-	for _, stat := range voteStats {
-		item := map[string]interface{}{
-			"user_id":  stat.ToUserId,
-			"username": stat.Username,
-			"nickname": stat.Nickname,
-			"avatar":   stat.Avatar,
-			"count":    stat.Count,
+	careerVotesMap := make(map[string]*VoteRecipient)
+	romanceVotesMap := make(map[string]*VoteRecipient)
+	wealthVotesMap := make(map[string]*VoteRecipient)
+
+	for _, vote := range voteDetails {
+		voter := map[string]interface{}{
+			"user_id":  vote.FromUserId,
+			"username": vote.FromUsername,
+			"nickname": vote.FromNickname,
+			"avatar":   vote.FromAvatar,
+			"created":  vote.Created,
 		}
-		switch stat.VoteType {
+
+		var targetMap map[string]*VoteRecipient
+		switch vote.VoteType {
 		case model.VoteTypeCareer:
-			careerVotes = append(careerVotes, item)
+			targetMap = careerVotesMap
 		case model.VoteTypeRomance:
-			romanceVotes = append(romanceVotes, item)
+			targetMap = romanceVotesMap
 		case model.VoteTypeWealth:
-			wealthVotes = append(wealthVotes, item)
+			targetMap = wealthVotesMap
+		default:
+			continue
 		}
+
+		if targetMap[vote.ToUserId] == nil {
+			targetMap[vote.ToUserId] = &VoteRecipient{
+				UserId:   vote.ToUserId,
+				Username: vote.ToUsername,
+				Nickname: vote.ToNickname,
+				Avatar:   vote.ToAvatar,
+				Count:    0,
+				Voters:   []map[string]interface{}{},
+			}
+		}
+
+		targetMap[vote.ToUserId].Count++
+		targetMap[vote.ToUserId].Voters = append(targetMap[vote.ToUserId].Voters, voter)
+	}
+
+	// 转换为数组并排序
+	careerVotes := make([]interface{}, 0, len(careerVotesMap))
+	for _, v := range careerVotesMap {
+		careerVotes = append(careerVotes, v)
+	}
+
+	romanceVotes := make([]interface{}, 0, len(romanceVotesMap))
+	for _, v := range romanceVotesMap {
+		romanceVotes = append(romanceVotes, v)
+	}
+
+	wealthVotes := make([]interface{}, 0, len(wealthVotesMap))
+	for _, v := range wealthVotesMap {
+		wealthVotes = append(wealthVotes, v)
 	}
 
 	// 3. 获取文章排名信息

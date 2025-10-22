@@ -229,73 +229,215 @@
             color: #667eea;
         }
 
-        /* 福签统计 */
-        .votes-container {
+        /* 福签统计 - 三列并排显示 */
+        .votes-grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
         }
-        .vote-section {
-            background: #f8f9fa;
+        .vote-category-section {
+            background: white;
             border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .vote-category-header {
             padding: 20px;
-        }
-        .vote-section.career {
-            border-left: 5px solid #FF6B6B;
-        }
-        .vote-section.romance {
-            border-left: 5px solid #FF69B4;
-        }
-        .vote-section.wealth {
-            border-left: 5px solid #FFD700;
-        }
-        .vote-header {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 10px;
-            margin-bottom: 15px;
-            font-size: 20px;
-            font-weight: bold;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 3px solid;
         }
-        .vote-header .emoji {
+        .vote-category-header.career {
+            border-bottom-color: #FF6B6B;
+            background: linear-gradient(135deg, #FFE5E5 0%, #FFD1D1 100%);
+        }
+        .vote-category-header.romance {
+            border-bottom-color: #FF69B4;
+            background: linear-gradient(135deg, #FFE5F5 0%, #FFD1E8 100%);
+        }
+        .vote-category-header.wealth {
+            border-bottom-color: #FFD700;
+            background: linear-gradient(135deg, #FFF8E5 0%, #FFEEB3 100%);
+        }
+        .category-icon {
             font-size: 28px;
         }
-        .vote-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .category-title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
         }
-        .vote-item {
+        .category-count {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 福签接收者卡片 */
+        .vote-recipient-card {
             background: white;
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 0;
+            padding: 18px;
+            margin: 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        .vote-recipient-card:last-child {
+            border-bottom: none;
+        }
+        .vote-recipient-card:hover {
+            background: #f8f9fa;
+            transform: translateX(3px);
+        }
+        .vote-recipient-header {
             display: flex;
             align-items: center;
             gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f8f9fa;
         }
-        .vote-avatar {
-            width: 40px;
-            height: 40px;
+        .vote-recipient-rank {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-        }
-        .vote-user-info {
-            flex: 1;
-        }
-        .vote-user-info h5 {
-            margin: 0 0 3px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 14px;
-            color: #333;
+            font-weight: bold;
+            flex-shrink: 0;
         }
-        .vote-user-info p {
-            margin: 0;
+        .vote-recipient-rank.top-1 {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+        }
+        .vote-recipient-rank.top-2 {
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+        }
+        .vote-recipient-rank.top-3 {
+            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+        }
+        .vote-recipient-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .vote-recipient-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .vote-recipient-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 4px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .vote-recipient-username {
             font-size: 12px;
             color: #999;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .vote-count {
-            font-size: 18px;
+        .vote-recipient-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .vote-recipient-count {
+            font-size: 24px;
             font-weight: bold;
-            color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .vote-recipient-label {
+            font-size: 11px;
+            color: #999;
+        }
+        .vote-voters-section {
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+        .vote-voters-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .vote-voters-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+        .vote-voters-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .voter-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px;
+            transition: all 0.2s ease;
+        }
+        .voter-card:hover {
+            background: #e9ecef;
+            transform: translateX(3px);
+        }
+        .voter-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .voter-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .voter-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .voter-time {
+            font-size: 11px;
+            color: #999;
+            margin: 2px 0 0 0;
         }
 
         /* 文章排名 */
@@ -423,8 +565,38 @@
         }
 
         @media (max-width: 768px) {
-            .votes-container {
+            .votes-grid-container {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .vote-recipient-header {
+                gap: 10px;
+            }
+            .vote-recipient-rank {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+            .vote-recipient-rank.top-1 {
+                width: 34px;
+                height: 34px;
+                font-size: 16px;
+            }
+            .vote-recipient-rank.top-2,
+            .vote-recipient-rank.top-3 {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .vote-recipient-avatar {
+                width: 45px;
+                height: 45px;
+            }
+            .vote-recipient-name {
+                font-size: 14px;
+            }
+            .vote-recipient-count {
+                font-size: 20px;
             }
         }
     </style>
@@ -465,31 +637,36 @@
             <span class="icon">🏮</span>
             <span>福签获得统计</span>
         </div>
-        <div class="votes-container">
-            <div class="vote-section career">
-                <div class="vote-header">
-                    <span class="emoji">🚀</span>
-                    <span>事业符</span>
+        <div class="votes-grid-container">
+            <div class="vote-category-section">
+                <div class="vote-category-header career">
+                    <span class="category-icon">🚀</span>
+                    <span class="category-title">事业符</span>
+                    <span class="category-count" id="careerCount">0</span>
                 </div>
-                <div class="vote-list" id="careerVotesList">
+                <div id="careerVotesContent">
                     <div class="loading">加载中...</div>
                 </div>
             </div>
-            <div class="vote-section romance">
-                <div class="vote-header">
-                    <span class="emoji">💝</span>
-                    <span>姻缘符</span>
+
+            <div class="vote-category-section">
+                <div class="vote-category-header romance">
+                    <span class="category-icon">💝</span>
+                    <span class="category-title">姻缘符</span>
+                    <span class="category-count" id="romanceCount">0</span>
                 </div>
-                <div class="vote-list" id="romanceVotesList">
+                <div id="romanceVotesContent">
                     <div class="loading">加载中...</div>
                 </div>
             </div>
-            <div class="vote-section wealth">
-                <div class="vote-header">
-                    <span class="emoji">💰</span>
-                    <span>招财符</span>
+
+            <div class="vote-category-section">
+                <div class="vote-category-header wealth">
+                    <span class="category-icon">💰</span>
+                    <span class="category-title">招财符</span>
+                    <span class="category-count" id="wealthCount">0</span>
                 </div>
-                <div class="vote-list" id="wealthVotesList">
+                <div id="wealthVotesContent">
                     <div class="loading">加载中...</div>
                 </div>
             </div>
@@ -693,31 +870,100 @@
 
         // 渲染福签统计
         function renderVotes(votes) {
-            renderVoteList('careerVotesList', votes.career || []);
-            renderVoteList('romanceVotesList', votes.romance || []);
-            renderVoteList('wealthVotesList', votes.wealth || []);
+            // 更新计数
+            document.getElementById('careerCount').textContent = votes.career?.length || 0;
+            document.getElementById('romanceCount').textContent = votes.romance?.length || 0;
+            document.getElementById('wealthCount').textContent = votes.wealth?.length || 0;
+
+            // 渲染各个类型的福签
+            renderVoteContent('careerVotesContent', votes.career || []);
+            renderVoteContent('romanceVotesContent', votes.romance || []);
+            renderVoteContent('wealthVotesContent', votes.wealth || []);
         }
 
-        function renderVoteList(elementId, voteList) {
+        function renderVoteContent(elementId, voteList) {
             const container = document.getElementById(elementId);
-            if (voteList.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p style="font-size: 14px;">暂无数据</p></div>';
+
+            if (!voteList || voteList.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>暂无数据</p></div>';
                 return;
             }
 
-            container.innerHTML = voteList.map(v => `
-                <div class="vote-item">
-                    <img src="${v.avatar || '/api/files/_pb_users_auth_/' + v.user_id + '/' + v.avatar}"
-                         alt="${v.nickname}" class="vote-avatar"
-                         onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${v.user_id}'">
-                    <div class="vote-user-info">
-                        <h5>${v.nickname || v.username}</h5>
-                        <p>@${v.username}</p>
+            // 排序：首先按数量降序，数量相同时按最新投票时间降序
+            const sortedList = [...voteList].sort((a, b) => {
+                // 首先比较数量
+                if (b.count !== a.count) {
+                    return b.count - a.count;
+                }
+
+                // 数量相同时，比较最新投票时间
+                const aTime = a.voters && a.voters.length > 0 ?
+                    Math.max(...a.voters.map(v => new Date(v.created || 0).getTime())) : 0;
+                const bTime = b.voters && b.voters.length > 0 ?
+                    Math.max(...b.voters.map(v => new Date(v.created || 0).getTime())) : 0;
+                return bTime - aTime;
+            });
+
+            let html = '';
+            sortedList.forEach((recipient, index) => {
+                const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
+
+                // 投票者列表
+                const voters = recipient.voters || [];
+                const votersHtml = voters.length > 0 ? `
+                    <div class="vote-voters-section">
+                        <div class="vote-voters-header">
+                            <span class="vote-voters-title">💌 来自 ${voters.length} 人的祝福</span>
+                        </div>
+                        <div class="vote-voters-grid">
+                            ${voters.map(voter => {
+                                const voteTime = voter.created ? new Date(voter.created).toLocaleDateString('zh-CN', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }) : '';
+                                return `
+                                    <div class="voter-card">
+                                        <img src="${voter.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + voter.user_id}"
+                                             alt="${voter.nickname}" class="voter-avatar"
+                                             onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${voter.user_id}'">
+                                        <div class="voter-info">
+                                            <p class="voter-name">${voter.nickname || voter.username}</p>
+                                            ${voteTime ? `<p class="voter-time">${voteTime}</p>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
-                    <div class="vote-count">${v.count}</div>
-                </div>
-            `).join('');
+                ` : '';
+
+                html += `
+                    <div class="vote-recipient-card">
+                        <div class="vote-recipient-header">
+                            <div class="vote-recipient-rank ${rankClass}">${rankEmoji}</div>
+                            <img src="${recipient.avatar || 'https://pwl.stackoverflow.wiki/avatar/' + recipient.user_id}"
+                                 alt="${recipient.nickname}" class="vote-recipient-avatar"
+                                 onerror="this.src='https://pwl.stackoverflow.wiki/avatar/${recipient.user_id}'">
+                            <div class="vote-recipient-info">
+                                <h3 class="vote-recipient-name">${recipient.nickname || recipient.username}</h3>
+                                <p class="vote-recipient-username">@${recipient.username}</p>
+                            </div>
+                            <div class="vote-recipient-stats">
+                                <div class="vote-recipient-count">${recipient.count}</div>
+                                <div class="vote-recipient-label">票数</div>
+                            </div>
+                        </div>
+                        ${votersHtml}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
+
 
         // 渲染文章排名
         function renderArticles(articles) {
