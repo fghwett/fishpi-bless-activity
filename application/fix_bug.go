@@ -16,7 +16,7 @@ func (application *Application) fixBug(e *core.BootstrapEvent) error {
 	list := []fixBugHandler{
 		application.fixExample,
 		//application.rewardReissue,
-		application.retryFailedPoints,
+		//application.retryFailedPoints,
 	}
 
 	for _, handler := range list {
